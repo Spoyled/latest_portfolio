@@ -57,7 +57,7 @@ class PostController extends Controller
         $post->featured = 0;
         $post->save();
 
-        return redirect()->route('dashboard')->with('status', 'Post created successfully!');
+        return redirect()->route('HomePage')->with('status', 'Post created successfully!');
     }
 
     public function show($id)

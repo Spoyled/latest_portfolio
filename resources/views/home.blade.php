@@ -7,49 +7,50 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="font-light antialiased">
-    <header class="flex items-center justify-between py-3 px-6 border-b border-gray-100">
+
+<body class="font-light antialiased bg-[#f0f4f8]">
+    <header class="flex items-center justify-between py-2 px-4 bg-blue-900 border-b border-yellow-500">
+
         <div id="header-left" class="flex items-center">
-        <div class="text-gray-800 font-semibold">
-            <span class="text-black text-xl">Pro</span><span class="text-yellow-500 text-xl">Snap</span>
-        </div>
+            <div class="text-gray-800 font-semibold">
+                <a href="" class="text-2xl font-semibold text-white hover:text-yellow-500">
+                    Pro<span class="text-yellow-400">Snap</span>
+                </a>
+            </div>
             <div class="top-menu ml-10">
-                <ul class="flex space-x-4">
+                <ul class="flex space-x-6">
                     <li>
-                        <a class="flex space-x-2 items-center hover:text-yellow-900 text-sm text-yellow-500"
+                        <a class="hover:text-yellow-400 text-sm text-white"
                             href="http://127.0.0.1:8000">
                             Home
                         </a>
                     </li>
-
                     <li>
-                        <a class="flex space-x-2 items-center hover:text-yellow-500 text-sm text-gray-500"
-                            href="http://127.0.0.1:8000/portfolios">
+                        <a class="hover:text-yellow-400 text-sm text-white"
+                            href="http://127.0.0.1:8000/MyPosts">
                             My Posts
                         </a>
                     </li>
-
                     <li>
-                        <a class="flex space-x-2 items-center hover:text-yellow-500 text-sm text-gray-500" href="{{ url('/all_posts') }}">All Posts</a>
+                        <a class="hover:text-yellow-400 text-sm text-white"
+                             href="http://127.0.0.1:8000/AllPosts">All Posts</a>
                     </li>
-
                     <li>
-                        <a class="flex space-x-2 items-center hover:text-yellow-500 text-sm text-gray-500"
-                            href="http://127.0.0.1:8000/make_post">
+                        <a class="hover:text-yellow-400 text-sm text-white"
+                            href="http://127.0.0.1:8000/Create">
                             Make a Post
                         </a>
                     </li>
-
                 </ul>
             </div>
         </div>
         <div id="header-right" class="flex items-center md:space-x-6">
             <div class="flex space-x-5">
-                <a class="flex space-x-2 items-center hover:text-yellow-500 text-sm text-gray-500"
+                <a class="hover:text-yellow-400 text-sm text-white"
                     href="http://127.0.0.1:8000/login">
                     Login
                 </a>
-                <a class="flex space-x-2 items-center hover:text-yellow-500 text-sm text-gray-500"
+                <a class="hover:text-yellow-400 text-sm text-white"
                     href="http://127.0.0.1:8000/register">
                     Register
                 </a>
@@ -58,20 +59,29 @@
     </header>
 
 
-    <div class="w-full text-center py-32">
-        <h1 class="text-2xl md:text-3xl font-bold text-center lg:text-5xl text-gray-700">
-            Welcome to <span class="text-black">Pro</span><span class="text-yellow-500">Snap</span>
-        </h1>
 
-        <p class="text-gray-500 text-lg mt-1">Resume Showcase</p>
-        <a class="px-3 py-2 text-lg text-white bg-gray-800 rounded mt-5 inline-block"
-            href="http://127.0.0.1:8000/make_post">Post your Resume</a>
+    <div class="relative w-full" style="max-width: 100%; height: 400px;">
+        <!-- Image -->
+        <img src="{{ asset('storage/images/A_horizontal_image_related_to_the_IT_industry,_fea.jpg') }}" alt="ProSnap Image" class="w-full h-full object-cover">
+
+        <!-- Overlay content -->
+        <div class="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-50 text-white p-6">
+            <h1 class="text-3xl md:text-4xl font-bold text-yellow-500">Welcome to ProSnap</h1>
+            <p class="text-lg md:text-xl mt-4">Find it difficult to find a job? Post your resume NOW and get a job in less than 24 hours!!!</p>
+            <a href="#" class="mt-6 bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-2 px-4 rounded-lg">Post your Resume</a>
+        </div>
+
+        <!-- Extended Shadow beneath the image -->
+        <div class="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-b from-transparent to-[#f0f4f8]"></div>
     </div>
+
+
+
 
     <main class="container mx-auto px-5 flex flex-grow">
         <div class="mb-10 w-full">
             <div class="mb-16">
-                <h2 class="mt-16 mb-5 text-3xl text-yellow-500 font-bold">Featured Posts</h2>
+                <h2 class="mt-16 mb-5 text-3xl text-yellow-600 font-bold">Featured Posts</h2>
                 <div class="w-full">
                     <div class="grid grid-cols-3 gap-10 w-full">
 
@@ -83,9 +93,11 @@
                     </div>
                 </div>
             </div>
-            <hr>
+            <div class="w-full my-8">
+                <div class="h-1 mx-auto bg-gradient-to-r from-yellow-500 via-yellow-400 to-yellow-600 rounded-full" style="width: 80%;"></div>
+            </div>
 
-            <h2 class="mt-16 mb-5 text-3xl text-yellow-500 font-bold">Latest Posts</h2>
+            <h2 class="mt-16 mb-5 text-3xl text-yellow-600 font-bold">Latest Posts</h2>
             <div class="w-full mb-5">
                 <div class="grid grid-cols-3 gap-10 gap-y-32 w-full">
                 @foreach($latestPosts as $post)
@@ -95,14 +107,18 @@
                 @endforeach
                 </div>
             </div>
-            <a class="mt-10 block text-center text-lg text-yellow-500 font-semibold"
-                href="{{ url('/all_posts') }}">More
+            <a class="mt-10 block text-center text-lg text-yellow-600 font-semibold"
+                href="{{ url('/AllPosts') }}">More
                 Posts</a>
         </div>
     </main>
 
-    <footer class="text-sm space-x-4 flex items-center border-t border-gray-100 flex-wrap justify-center py-4 ">
-        <a class="text-gray-500 hover:text-yellow-500" href="{{ url('/login') }}">Login</a>
-        <a class="text-gray-500 hover:text-yellow-500" href="{{ url('/register') }}">Register</a>
+    <footer class="text-base space-x-6 flex items-center justify-center py-4 bg-blue-900 border-t border-yellow-500 text-white">
+        <a class="hover:text-yellow-400" href="{{ url('/login') }}">Login</a>
+        <a class="hover:text-yellow-400" href="{{ url('/register') }}">Register</a>
+        <a class="hover:text-yellow-400 text-sm text-white"
+           href="http://127.0.0.1:8000/EmployerRegister">
+           Employer Register
+        </a>
     </footer>
 </body>

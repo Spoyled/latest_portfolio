@@ -11,7 +11,7 @@ class HomeController extends Controller
      */
     public function __invoke(Request $request)
     {
-        return view('home', [
+        return view('Home', [
             'featuredPosts' => Post::where('featured','1')->latest('published_at')->take(3)->get(),
             'latestPosts' => Post::latest('published_at')->take(9)->get()
         ]);

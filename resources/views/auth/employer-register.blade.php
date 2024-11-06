@@ -1,63 +1,5 @@
 <script src="https://cdn.tailwindcss.com"></script>
-<!DOCTYPE html>
-<html>
 
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-
-
-<body class="font-light antialiased bg-[#f0f4f8]">
-    <header class="flex items-center justify-between py-2 px-4 bg-blue-900 border-b border-yellow-500">
-
-        <div id="header-left" class="flex items-center">
-            <div class="text-gray-800 font-semibold">
-                <a href="" class="text-2xl font-semibold text-white hover:text-yellow-500">
-                    Pro<span class="text-yellow-400">Snap</span>
-                </a>
-            </div>
-            <div class="top-menu ml-10">
-                <ul class="flex space-x-6">
-                    <li>
-                        <a class="hover:text-yellow-400 text-sm text-white"
-                            href="http://127.0.0.1:8000">
-                            Home
-                        </a>
-                    </li>
-                    <li>
-                        <a class="hover:text-yellow-400 text-sm text-white"
-                            href="http://127.0.0.1:8000/MyPosts">
-                            My Posts
-                        </a>
-                    </li>
-                    <li>
-                        <a class="hover:text-yellow-400 text-sm text-white"
-                             href="http://127.0.0.1:8000/AllPosts">All Posts</a>
-                    </li>
-                    <li>
-                        <a class="hover:text-yellow-400 text-sm text-white"
-                            href="http://127.0.0.1:8000/Create">
-                            Make a Post
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-        <div id="header-right" class="flex items-center md:space-x-6">
-            <div class="flex space-x-5">
-                <a class="hover:text-yellow-400 text-sm text-white"
-                    href="http://127.0.0.1:8000/login">
-                    Login
-                </a>
-                <a class="hover:text-yellow-400 text-sm text-white"
-                    href="http://127.0.0.1:8000/register">
-                    Register
-                </a>
-            </div>
-        </div>
-    </header>
 <x-guest-layout>
     <x-authentication-card>
         <x-slot name="logo">
@@ -68,11 +10,11 @@
 
         <x-validation-errors class="mb-4" />
 
-        <form method="POST" action="{{ route('register') }}">
+        <form method="POST" action="{{ route('employer.register') }}">
             @csrf
 
             <div>
-                <x-label for="name" value="{{ __('Name') }}" />
+                <x-label for="name" value="{{ __('Company Name') }}" />
                 <x-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
             </div>
 
@@ -109,12 +51,12 @@
             @endif
 
             <div class="flex items-center justify-end mt-4">
-                <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('login') }}">
+                <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('employer.login') }}">
                     {{ __('Already registered?') }}
                 </a>
 
                 <x-button class="ms-4">
-                    {{ __('Register') }}
+                    {{ __('Register as Employer') }}
                 </x-button>
             </div>
         </form>

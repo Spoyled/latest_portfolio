@@ -1,11 +1,10 @@
-
 <!-- Header -->
 @include('layouts.header')
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
     <div class="w-full text-center py-32">
-        <h1 class="text-2xl md:text-3xl font-bold text-center lg:text-5xl text-yellow-700">
-            {{ $post->name }}'s <span class="text-black">post - </span><span class="text-yellow-500">{{ $post->title }}</span>
+        <h1 class="text-2xl md:text-3xl font-bold text-center lg:text-5xl text-yellow-900">
+            {{ $post->name }}'s <span class="text-black">post - </span><span class="text-yellow-600">{{ $post->title }}</span>
         </h1>
     </div>
 
@@ -18,30 +17,16 @@
                     <img class="object-cover h-96 w-96 rounded-full shadow-lg" src="{{ asset('storage/posts/' . $post->image) }}" alt="Post Image">
                 </div>
 
-                <input id="titleInput" type="text" value="{{ $post->title }}" style="display:none;">
-                <p class="text-xl font-semibold text-gray-800 mt-4 mb-2">Title's Language: <span id="titleLanguage"></span></p>
-
-                <input id="bodyInput" type="text" value="{{ $post->body }}" style="display:none;">
-                <p class="text-xl font-semibold text-gray-800 mt-4 mb-2">Body's Language: <span id="bodyLanguage"></span></p>
-
-                <input id="educationInput" type="text" value="{{ $post->education }}" style="display:none;">
-                <p class="text-xl font-semibold text-gray-800 mt-4 mb-2">Education's Language: <span id="educationLanguage"></span></p>
-
-                <input id="skillsInput" type="text" value="{{ $post->skills }}" style="display:none;">
-                <p class="text-xl font-semibold text-gray-800 mt-4 mb-2">Skills' Language: <span id="skillsLanguage"></span></p>
-
-
-
-                <h3 class="text-3xl font-bold text-center text-gray-800 mb-4">Resume Details</h3>
+                <h3 class="text-3xl font-bold text-center text-gray-900 mb-4">Resume Details</h3>
 
                 <div class="text-left mt-6 px-4">
-                    <p class="text-xl font-semibold text-gray-800 mb-2">Description</p>
+                    <p class="text-xl font-semibold text-gray-900 mb-2">Description</p>
                     <p class="text-base text-gray-600">{{ $post->body }}</p>
 
-                    <p class="text-xl font-semibold text-gray-800 mt-4 mb-2">Education</p>
+                    <p class="text-xl font-semibold text-gray-900 mt-4 mb-2">Education</p>
                     <p class="text-base text-gray-600">{{ $post->education }}</p>
                     
-                    <p class="text-xl font-semibold text-gray-800 mt-4 mb-2">Skills</p>
+                    <p class="text-xl font-semibold text-gray-900 mt-4 mb-2">Skills</p>
                     <p class="text-base text-gray-600">{{ $post->skills }}</p>
                 
                     <div class="flex flex-col space-y-2 mt-4">
@@ -60,51 +45,27 @@
 
     <div class="bg-white py-8 px-6 shadow rounded-lg my-6">
         <div class="mb-4">
-            <h2 class="text-2xl font-bold text-gray-800">Comments</h2>
+            <h2 class="text-2xl font-bold text-gray-900">Comments</h2>
             <div class="border-b-2 border-gray-200 my-2"></div>
         </div>
     
         <div class="space-y-4">
             @foreach ($post->comments as $comment)
                 <div class="comment p-4 bg-gray-100 rounded-lg">
-                    <p class="font-semibold text-gray-700">{{ $comment->user ? $comment->user->name : 'Unknown user' }} says:</p>
+                    <p class="font-semibold text-gray-900">{{ $comment->user ? $comment->user->name : 'Unknown user' }} says:</p>
                     <p class="text-gray-600">{{ $comment->body }}</p>
                 </div>
             @endforeach
         </div>
     
         <div class="mt-6">
-            <form action="{{ route('comments.store', $post->id) }}" method="POST" class="space-y-4">
+            <form action="{{ route('post.comments.store', $post->id) }}" method="POST" class="space-y-4">
                 @csrf
                 <textarea name="body" class="w-full p-3 rounded border border-gray-300 focus:outline-none focus:border-blue-500 transition-colors" placeholder="Add a comment..." required></textarea>
                 <button type="submit" class="bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-700 transition-colors duration-300 ease-in-out">Post Comment</button>
             </form>
         </div>
-        
 
     </div>
-    <script>
-    $(document).ready(function() {
-        detectLanguage('#titleInput', '#titleLanguage');
-        detectLanguage('#bodyInput', '#bodyLanguage');
-        detectLanguage('#educationInput', '#educationLanguage');
-        detectLanguage('#skillsInput', '#skillsLanguage');
-    });
-
-    function detectLanguage(inputSelector, outputSelector) {
-        var text = $(inputSelector).val();
-        $.ajax({
-            method: 'GET',
-            url: 'https://api.api-ninjas.com/v1/textlanguage?text=' + encodeURIComponent(text),
-            headers: { 'X-Api-Key': 'rC7tzXrENMs7TqpM8LuVDw617LWkvjOtwJ1rrNuM' },
-            contentType: 'application/json',
-            success: function(result) {
-                console.log(result);
-                $(outputSelector).text(result.language || 'Unknown');
-            }
-        });
-    }
-</script>
-    
 <!-- Footer -->
 @include('layouts.footer')

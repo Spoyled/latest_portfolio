@@ -36,9 +36,13 @@ return [
     */
 
     'guards' => [
-        'web' => [
-            'driver' => 'session',
-            'provider' => 'users',
+    'web' => [
+        'driver' => 'session',
+        'provider' => 'users',
+        ],
+    'employer' => [ // Add this
+        'driver' => 'session',
+        'provider' => 'employers',
         ],
     ],
 
@@ -60,16 +64,16 @@ return [
     */
 
     'providers' => [
-        'users' => [
-            'driver' => 'eloquent',
-            'model' => App\Models\User::class,
-        ],
-
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
+    'users' => [
+        'driver' => 'eloquent',
+        'model' => App\Models\User::class,
     ],
+    'employers' => [ // You already have this
+        'driver' => 'eloquent',
+        'model' => App\Models\Employer::class,
+    ],
+],
+
 
     /*
     |--------------------------------------------------------------------------
@@ -91,13 +95,20 @@ return [
     */
 
     'passwords' => [
-        'users' => [
-            'provider' => 'users',
-            'table' => 'password_reset_tokens',
-            'expire' => 60,
-            'throttle' => 60,
-        ],
+    'users' => [
+        'provider' => 'users',
+        'table' => 'password_reset_tokens',
+        'expire' => 60,
+        'throttle' => 60,
     ],
+    'employers' => [ // Add this section if needed
+        'provider' => 'employers',
+        'table' => 'password_reset_tokens',
+        'expire' => 60,
+        'throttle' => 60,
+    ],
+],
+
 
     /*
     |--------------------------------------------------------------------------
