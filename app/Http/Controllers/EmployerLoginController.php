@@ -15,9 +15,10 @@ class EmployerLoginController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->only('email', 'password');
+
         if (Auth::guard('employer')->attempt($credentials, $request->filled('remember'))) {
-            // If authentication is successful, redirect to the employer dashboard
-            return redirect()->intended(route('employer.dashboard'));
+            // Redirect employers to their dashboard
+            return redirect()->route('employer.dashboard');
         }
 
         return redirect()->back()->withInput($request->only('email', 'remember'))->withErrors([
@@ -25,14 +26,28 @@ class EmployerLoginController extends Controller
         ]);
     }
 
+
+
+
+
     public function logout(Request $request)
     {
         Auth::guard('employer')->logout();
 
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        return redirect()->route('employer.login'); // Redirect to the employer login page
     }
+
+
+    protected function redirectTo()
+    {
+        if (auth()->guard('employer')->check()) {
+            return '/employer/dashboard'; // Replace with your desired route
+        }
+
+        return '/dashboard'; // Default for users
+    }
+
 }

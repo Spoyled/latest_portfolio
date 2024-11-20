@@ -33,6 +33,6 @@ class EmployerRegisterController extends Controller
 
         auth()->guard('employer')->login($employer);
 
-        return redirect()->route('EmployerLogin'); // Customize the route
+        return redirect()->route('employer.login'); // Customize the route
     }
 }

@@ -211,4 +211,23 @@ return [
 
     'partitioned' => false,
 
+        'domain' => env('SESSION_DOMAIN', null),
+    'employer_session' => [
+        'driver' => 'file',
+        'lifetime' => 120,
+        'expire_on_close' => false,
+        'encrypt' => false,
+        'files' => storage_path('framework/sessions'),
+        'connection' => null,
+        'table' => 'sessions',
+        'lottery' => [2, 100],
+        'cookie' => 'employer_session',
+        'path' => '/',
+        'domain' => env('SESSION_DOMAIN', null),
+        'secure' => env('SESSION_SECURE_COOKIE', false),
+        'http_only' => true,
+        'same_site' => 'lax',
+    ],
+
+
 ];

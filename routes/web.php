@@ -1,46 +1,51 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
-*/
-use App\Http\Controllers\HomeController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PortfolioController;
 use App\Http\Controllers\MakePostController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ShowAllPosts;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\EmployerRegisterController;
 use App\Http\Controllers\EmployerLoginController;
 
-Route::get('/', HomeController::class)->middleware('auth.redirect');
-
-#Employer
-Route::get('/EmployerRegister', [EmployerRegisterController::class, 'showRegistrationForm'])->name('employer.register');
-Route::post('/EmployerRegister', [EmployerRegisterController::class, 'register']);
-
-Route::get('EmployerLogin', [EmployerLoginController::class, 'showLoginForm'])->name('employer.login');
-Route::post('EmployerLogin', [EmployerLoginController::class, 'login'])->name('employer.login.post');
-Route::post('EmployerLogout', [EmployerLoginController::class, 'logout'])->name('employer.logout');
+// Public Home Page
+Route::get('/', [HomeController::class, '__invoke'])->name('home');
+Route::get('/HomePage', [DashboardController::class, '__invoke'])->name('HomePage');
 
 
+// Employer Authentication and Dashboard Routes
+// Employer Authentication and Dashboard Routes
+Route::prefix('employer')->group(function () {
+    // Employer Auth Routes
+    Route::get('register', [EmployerRegisterController::class, 'showRegistrationForm'])->name('employer.register');
+    Route::post('register', [EmployerRegisterController::class, 'register']);
+    Route::get('login', [EmployerLoginController::class, 'showLoginForm'])->name('employer.login');
+    Route::post('login', [EmployerLoginController::class, 'login'])->middleware('guest:employer')->name('employer.login.post');
+    Route::post('logout', [EmployerLoginController::class, 'logout'])->name('employer.logout');
+
+    // Employer Dashboard Route
+    Route::middleware(['auth:employer'])->group(function () {
+        Route::get('/dashboard', function () {
+            return view('employer.home'); // Matches resources/views/employer.home.blade.php
+        })->name('employer.dashboard');
+    });
+});
+
+
+// Shared Home Page and User Routes
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
     'verified',
-    
 ])->group(function () {
-    Route::get('/HomePage', DashboardController::class)->name('HomePage');
+    // User Dashboard
+    Route::get('/dashboard', DashboardController::class)->name('dashboard'); // Users go to 'dashboard.blade.php'
+
+    // Other User-Specific Routes
     Route::get('/MyPosts', [PortfolioController::class, 'index'])->name('portfolios.index');
     Route::get('/Create', [MakePostController::class, 'index'])->name('make_post.index');
     Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
@@ -50,5 +55,5 @@ Route::middleware([
     Route::get('/AllPosts', [ShowAllPosts::class, 'index'])->name('all_posts.index');
     Route::post('/posts/{post}/comments', [CommentController::class, 'store'])->name('post.comments.store');
     Route::get('/posts/{post}/comments', [CommentController::class, 'index'])->name('post.comments.index');
-    Route::get('/employer/dashboard', [EmployerDashboardController::class, 'index'])->name('employer.dashboard');
+    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
 });

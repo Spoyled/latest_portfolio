@@ -117,8 +117,12 @@
         <a class="hover:text-yellow-400" href="{{ url('/login') }}">Login</a>
         <a class="hover:text-yellow-400" href="{{ url('/register') }}">Register</a>
         <a class="hover:text-yellow-400 text-sm text-white"
-           href="http://127.0.0.1:8000/EmployerRegister">
+            href="{{ route('employer.register') }}">
            Employer Register
+        </a>
+        <a class="hover:text-yellow-400 text-sm text-white"
+            href="{{ route('employer.login') }}">
+           Employer Login
         </a>
     </footer>
 </body>

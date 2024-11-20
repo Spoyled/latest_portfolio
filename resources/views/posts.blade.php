@@ -50,13 +50,46 @@
         </div>
     
         <div class="space-y-4">
-            @foreach ($post->comments as $comment)
-                <div class="comment p-4 bg-gray-100 rounded-lg">
-                    <p class="font-semibold text-gray-900">{{ $comment->user ? $comment->user->name : 'Unknown user' }} says:</p>
-                    <p class="text-gray-600">{{ $comment->body }}</p>
-                </div>
-            @endforeach
-        </div>
+    @foreach ($post->comments as $comment)
+    <div class="comment p-4 bg-gray-100 rounded-lg" id="comment-{{ $comment->id }}">
+        <p class="font-semibold text-gray-900">{{ $comment->user ? $comment->user->name : 'Unknown user' }} says:</p>
+        <p class="text-gray-600">{{ $comment->body }}</p>
+
+        @if(Auth::check() && Auth::user()->is_admin) <!-- Check if user is admin -->
+            <form action="{{ route('comments.destroy', $comment->id) }}" method="POST" class="inline-block delete-comment-form" data-comment-id="{{ $comment->id }}">
+                @csrf
+                @method('DELETE')
+                <button type="button" class="text-red-500 font-bold hover:text-red-700 transition-colors delete-comment-btn">Delete</button>
+            </form>
+        @endif
+    </div>
+    @endforeach
+</div>
+
+<script>
+    $(document).on('click', '.delete-comment-btn', function () {
+    const form = $(this).closest('form');
+    const commentId = form.data('comment-id');
+    const actionUrl = form.attr('action');
+
+    $.ajax({
+        url: actionUrl,
+        type: 'POST',
+        data: {
+            _method: 'DELETE',
+            _token: '{{ csrf_token() }}'
+        },
+        success: function (response) {
+            $(`#comment-${commentId}`).remove();
+        },
+        error: function () {
+            alert('Error deleting comment');
+        }
+    });
+});
+
+</script>
+
     
         <div class="mt-6">
             <form action="{{ route('post.comments.store', $post->id) }}" method="POST" class="space-y-4">

@@ -44,7 +44,6 @@
                 <button @click="open = ! open" class="flex items-center focus:outline-none">
                     <img src="{{ Auth::user()->profile_photo_path ? asset('storage/' . Auth::user()->profile_photo_path) : asset('storage/images/profile1.png') }}" class="rounded-full h-20 w-20 object-cover" alt="Profile Picture">
                 </button>
-
                 <div x-show="open" class="absolute right-0 mt-2 py-2 w-48 bg-white rounded-md shadow-xl z-20">
                     <a href="{{ route('profile.show') }}" class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100">Profile</a>
                     <a href="#" @click="event.preventDefault(); document.getElementById('logout-form').submit();" class="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100">Logout</a>
