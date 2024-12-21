@@ -8,6 +8,8 @@ class ProfileController extends Controller
 {
     public function show()
     {
-        return view('profile.show', ['user' => auth()->user()]);
+        $user = auth('employer')->check() ? auth('employer')->user() : auth()->user();
+        return view('profile.show', ['user' => $user]);
     }
+
 }

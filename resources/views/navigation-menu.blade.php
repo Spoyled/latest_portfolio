@@ -10,15 +10,22 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex items-center space-x-8">
-                <a href="{{ route('HomePage') }}" class="text-2xl font-semibold text-white hover:text-yellow-500">
+            <a href="{{ auth('employer')->check() ? route('employer.dashboard') : route('HomePage') }}" 
+                class="text-2xl font-semibold text-white hover:text-yellow-500">
                     Pro<span class="text-yellow-400">Snap</span>
-                </a>
-                
+            </a>
                 <nav class="hidden sm:flex space-x-4">
+                @if(auth('employer')->check())
+                    <a class="hover:text-yellow-400 text-sm text-white" href="{{ route('employer.dashboard') }}">Home</a>
+                    <a class="hover:text-yellow-400 text-sm text-white" href="{{ route('employer.portfolios') }}">My Posts</a>
+                    <a class="hover:text-yellow-400 text-sm text-white" href="{{ route('employer.all_posts') }}">All Posts</a>
+                    <a class="hover:text-yellow-400 text-sm text-white" href="{{ route('employer.make_post') }}">Make a Post</a>
+                @elseif(auth()->check())
                     <a class="hover:text-yellow-400 text-sm text-white" href="{{ route('HomePage') }}">Home</a>
-                    <a class="hover:text-yellow-400 text-sm text-white" href="{{ url('/MyPosts') }}">My Posts</a>
-                    <a class="hover:text-yellow-400 text-sm text-white" href="{{ url('/AllPosts') }}">All Posts</a>
-                    <a class="hover:text-yellow-400 text-sm text-white" href="{{ url('/Create') }}">Make a Post</a>
+                    <a class="hover:text-yellow-400 text-sm text-white" href="{{ route('portfolios.index') }}">My Posts</a>
+                    <a class="hover:text-yellow-400 text-sm text-white" href="{{ route('all_posts.index') }}">All Posts</a>
+                    <a class="hover:text-yellow-400 text-sm text-white" href="{{ route('make_post.index') }}">Make a Post</a>
+                @endif
                 </nav>
             </div>
            
@@ -87,7 +94,7 @@
                         <x-slot name="trigger">
                             @if (Laravel\Jetstream\Jetstream::managesProfilePhotos())
                                 <button class="flex text-sm border-2 border-transparent rounded-full focus:outline-none focus:border-gray-300 transition">
-                                <img src="{{ Auth::user()->profile_photo_path ? asset('storage/' . Auth::user()->profile_photo_path) : asset('storage/images/profile1.png') }}" class="rounded-full h-20 w-20 object-cover" alt="Profile Picture">
+                                <img src="{{ Auth::user()->profile_photo_path ? asset('storage/profile_photos/' . Auth::user()->profile_photo_path) : asset('storage/images/profile1.png') }}" class="rounded-full h-20 w-20 object-cover" alt="Profile Picture">
 
                                 </button>
                             @else
@@ -112,12 +119,6 @@
                             <x-dropdown-link href="{{ route('profile.show') }}">
                                 {{ __('Profile') }}
                             </x-dropdown-link>
-
-                            @if (Laravel\Jetstream\Jetstream::hasApiFeatures())
-                                <x-dropdown-link href="{{ route('api-tokens.index') }}">
-                                    {{ __('API Tokens') }}
-                                </x-dropdown-link>
-                            @endif
 
                             <div class="border-t border-gray-200"></div>
 

@@ -62,8 +62,8 @@ class ProjectCrudController extends CrudController
         CRUD::setValidation(ProjectRequest::class);
 
         CRUD::field('title');
-       
-        
+
+
     }
 
     /**

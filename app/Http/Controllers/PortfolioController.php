@@ -8,8 +8,15 @@ class PortfolioController extends Controller
 {
     public function index()
     {
-        return view('portfolios', [
-            'myPosts' => Post::where('user_id', auth()->id())->latest('published_at')->take(32)->get()
-        ]);
+        if (auth()->guard('employer')->check()) {
+            // For employers, fetch posts where the employer is the creator
+            $myPosts = Post::where('employer_id', auth()->guard('employer')->id())->latest('published_at')->take(32)->get();
+        } else {
+            // For regular users, fetch posts by user_id
+            $myPosts = Post::where('user_id', auth()->id())->latest('published_at')->take(32)->get();
+        }
+
+        return view('portfolios', compact('myPosts'));
     }
+
 }

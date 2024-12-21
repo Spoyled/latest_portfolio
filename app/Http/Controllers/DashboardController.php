@@ -12,8 +12,16 @@ class DashboardController extends Controller
     public function __invoke(Request $request)
     {
         return view('dashboard', [
-            'featuredPosts' => Post::where('featured','1')->latest('published_at')->take(3)->get(),
-            'latestPosts' => Post::latest('published_at')->take(9)->get()
+            'featuredPosts' => Post::where('post_type', 'job_offer')
+                ->where('featured', true)
+                ->latest('published_at')
+                ->take(3)
+                ->get(),
+
+            'latestPosts' => Post::where('post_type', 'job_offer')
+                ->latest('published_at')
+                ->take(9)
+                ->get(),
         ]);
     }
 }

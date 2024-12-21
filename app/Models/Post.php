@@ -28,6 +28,19 @@ class Post extends Model
     {
         return $this->hasMany(Comment::class);
     }
+
+    public function applicants()
+    {
+        return $this->belongsToMany(User::class, 'post_user_applications')
+                    ->withPivot('cv_path')
+                    ->withTimestamps();
+    }
+
+    public function employer()
+    {
+        return $this->belongsTo(Employer::class);
+    }
+
 }
 
 

@@ -26,6 +26,7 @@ class Kernel extends HttpKernel
     protected $routeMiddleware = [
         // other middleware
         'auth.redirect' => \App\Http\Middleware\RedirectIfAuthenticated::class,
+        'user.guard' => \App\Http\Middleware\EnsureUserGuard::class,
     ];
     
 

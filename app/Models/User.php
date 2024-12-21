@@ -60,4 +60,12 @@ class User extends Authenticatable
     protected $appends = [
         'profile_photo_url',
     ];
+
+    public function appliedPosts()
+    {
+        return $this->belongsToMany(Post::class, 'post_user_applications')
+                    ->withPivot('cv_path')
+                    ->withTimestamps();
+    }
+
 }

@@ -1,122 +1,113 @@
-<script src="https://cdn.tailwindcss.com"></script>
 <!DOCTYPE html>
 <html>
 
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="//unpkg.com/alpinejs" defer></script> <!-- Alpine.js for interactivity -->
+    <style>
+        .sticky-nav {
+            position: -webkit-sticky;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background-color: white;
+            box-shadow: 0 4px 2px -4px gray;
+        }
+    </style>
 </head>
 
-
-<body class="font-light antialiased bg-[#f0f4f8]">
-    <header class="flex items-center justify-between py-2 px-4 bg-blue-900 border-b border-yellow-500">
-
-        <div id="header-left" class="flex items-center">
-            <div class="text-gray-800 font-semibold">
-                <a href="" class="text-2xl font-semibold text-white hover:text-yellow-500">
+<body class="min-h-screen flex flex-col bg-[#f0f4f8]">
+    <!-- Header (sticky and doesn't interfere with the layout) -->
+    <header class="sticky-nav h-16 px-4 bg-blue-900 border-b border-yellow-500 w-full">
+        <div class="container mx-auto flex justify-between items-center h-full">
+            <!-- Logo and Navigation Links -->
+            <div class="flex items-center space-x-8">
+                <a href="{{ route('home') }}" class="text-2xl font-semibold text-white hover:text-yellow-500">
                     Pro<span class="text-yellow-400">Snap</span>
                 </a>
+                <nav class="hidden sm:flex space-x-4">
+                    <a class="hover:text-yellow-400 text-sm text-white" href="{{ route('home') }}">Home</a>
+                </nav>
             </div>
-            <div class="top-menu ml-10">
-                <ul class="flex space-x-6">
-                    <li>
-                        <a class="hover:text-yellow-400 text-sm text-white"
-                            href="http://127.0.0.1:8000">
-                            Home
-                        </a>
-                    </li>
-                    <li>
-                        <a class="hover:text-yellow-400 text-sm text-white"
-                            href="http://127.0.0.1:8000/MyPosts">
-                            My Posts
-                        </a>
-                    </li>
-                    <li>
-                        <a class="hover:text-yellow-400 text-sm text-white"
-                             href="http://127.0.0.1:8000/AllPosts">All Posts</a>
-                    </li>
-                    <li>
-                        <a class="hover:text-yellow-400 text-sm text-white"
-                            href="http://127.0.0.1:8000/Create">
-                            Make a Post
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-        <div id="header-right" class="flex items-center md:space-x-6">
-            <div class="flex space-x-5">
-                <a class="hover:text-yellow-400 text-sm text-white"
-                    href="http://127.0.0.1:8000/login">
-                    Login
-                </a>
-                <a class="hover:text-yellow-400 text-sm text-white"
-                    href="http://127.0.0.1:8000/register">
-                    Register
-                </a>
-            </div>
+            <!-- Logout Form -->
+            <form id="logout-form" method="POST" action="{{ route('logout') }}" style="display: none;">
+                @csrf
+            </form>
         </div>
     </header>
-<x-guest-layout>
-    <x-authentication-card>
-        <x-slot name="logo">
-             <div class="text-gray-800 font-semibold">
-                <span class="text-black text-xl">Pro</span><span class="text-yellow-500 text-xl">Snap</span>
-            </div>
-        </x-slot>
 
-        <x-validation-errors class="mb-4" />
+<div class="relative w-full h-screen">
+    <!-- Full-page Background Image -->
+    <img src="{{ asset('storage/images/A_horizontal_image_related_to_the_IT_industry,_fea.jpg') }}" alt="ProSnap Image" class="absolute inset-0 w-full h-full object-cover">
 
-        <form method="POST" action="{{ route('register') }}">
-            @csrf
-
-            <div>
-                <x-label for="name" value="{{ __('Name') }}" />
-                <x-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
-            </div>
-
-            <div class="mt-4">
-                <x-label for="email" value="{{ __('Email') }}" />
-                <x-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
-            </div>
-
-            <div class="mt-4">
-                <x-label for="password" value="{{ __('Password') }}" />
-                <x-input id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="new-password" />
-            </div>
-
-            <div class="mt-4">
-                <x-label for="password_confirmation" value="{{ __('Confirm Password') }}" />
-                <x-input id="password_confirmation" class="block mt-1 w-full" type="password" name="password_confirmation" required autocomplete="new-password" />
-            </div>
-
-            @if (Laravel\Jetstream\Jetstream::hasTermsAndPrivacyPolicyFeature())
-                <div class="mt-4">
-                    <x-label for="terms">
-                        <div class="flex items-center">
-                            <x-checkbox name="terms" id="terms" required />
-
-                            <div class="ms-2">
-                                {!! __('I agree to the :terms_of_service and :privacy_policy', [
-                                        'terms_of_service' => '<a target="_blank" href="'.route('terms.show').'" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">'.__('Terms of Service').'</a>',
-                                        'privacy_policy' => '<a target="_blank" href="'.route('policy.show').'" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">'.__('Privacy Policy').'</a>',
-                                ]) !!}
-                            </div>
-                        </div>
-                    </x-label>
+    <!-- Overlay Content (Centered Registration Form) -->
+    <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60">
+        <div class="bg-white bg-opacity-90 p-8 rounded-lg shadow-lg w-full max-w-md">
+            <!-- Logo -->
+            <div class="text-center mb-4">
+                <div class="text-gray-800 font-semibold text-3xl">
+                    <span class="text-black">Pro</span><span class="text-yellow-500">Snap</span>
                 </div>
-            @endif
-
-            <div class="flex items-center justify-end mt-4">
-                <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('login') }}">
-                    {{ __('Already registered?') }}
-                </a>
-
-                <x-button class="ms-4">
-                    {{ __('Register') }}
-                </x-button>
             </div>
-        </form>
-    </x-authentication-card>
-</x-guest-layout>
+
+            <!-- Validation Errors -->
+            <x-validation-errors class="mb-4" />
+
+            <!-- Registration Form -->
+            <form method="POST" action="{{ route('register') }}">
+                @csrf
+
+                <div>
+                    <x-label for="name" value="{{ __('Name') }}" />
+                    <x-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
+                </div>
+
+                <div class="mt-4">
+                    <x-label for="email" value="{{ __('Email') }}" />
+                    <x-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
+                </div>
+
+                <div class="mt-4">
+                    <x-label for="password" value="{{ __('Password') }}" />
+                    <x-input id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="new-password" />
+                </div>
+
+                <div class="mt-4">
+                    <x-label for="password_confirmation" value="{{ __('Confirm Password') }}" />
+                    <x-input id="password_confirmation" class="block mt-1 w-full" type="password" name="password_confirmation" required autocomplete="new-password" />
+                </div>
+
+                @if (Laravel\Jetstream\Jetstream::hasTermsAndPrivacyPolicyFeature())
+                    <div class="mt-4">
+                        <x-label for="terms">
+                            <div class="flex items-center">
+                                <x-checkbox name="terms" id="terms" required />
+
+                                <div class="ml-2">
+                                    {!! __('I agree to the :terms_of_service and :privacy_policy', [
+                                        'terms_of_service' => '<a target="_blank" href="'.route('terms.show').'" class="underline text-sm text-gray-600 hover:text-gray-900">'.__('Terms of Service').'</a>',
+                                        'privacy_policy' => '<a target="_blank" href="'.route('policy.show').'" class="underline text-sm text-gray-600 hover:text-gray-900">'.__('Privacy Policy').'</a>',
+                                    ]) !!}
+                                </div>
+                            </div>
+                        </x-label>
+                    </div>
+                @endif
+
+                <div class="flex items-center justify-between mt-4">
+                    <a class="underline text-sm text-gray-600 hover:text-gray-900" href="{{ route('login') }}">
+                        {{ __('Already registered?') }}
+                    </a>
+
+                    <x-button class="ml-4">
+                        {{ __('Register') }}
+                    </x-button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.tailwindcss.com"></script>

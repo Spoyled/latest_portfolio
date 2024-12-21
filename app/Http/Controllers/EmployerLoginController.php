@@ -17,18 +17,17 @@ class EmployerLoginController extends Controller
         $credentials = $request->only('email', 'password');
 
         if (Auth::guard('employer')->attempt($credentials, $request->filled('remember'))) {
-            // Redirect employers to their dashboard
+            $request->session()->forget('url.intended'); // Clear any intended URL
             return redirect()->route('employer.dashboard');
         }
 
-        return redirect()->back()->withInput($request->only('email', 'remember'))->withErrors([
-            'email' => 'The provided credentials do not match our records.',
-        ]);
+        // Redirect back with errors if login fails
+        return redirect()->route('employer.login')
+            ->withInput($request->only('email', 'remember'))
+            ->withErrors([
+                'email' => 'The provided credentials do not match our records.',
+            ]);
     }
-
-
-
-
 
     public function logout(Request $request)
     {
@@ -37,7 +36,7 @@ class EmployerLoginController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('employer.login'); // Redirect to the employer login page
+        return redirect()->route('home'); // Redirect to the employer login page
     }
 
 
