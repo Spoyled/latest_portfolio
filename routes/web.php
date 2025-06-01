@@ -1,6 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
+
+// Controllers
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PortfolioController;
 use App\Http\Controllers\MakePostController;
@@ -13,22 +16,21 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\EmployerRegisterController;
 use App\Http\Controllers\EmployerLoginController;
 use App\Http\Controllers\EmployerDashboardController;
-// Public Home Page
-use Illuminate\Support\Facades\Auth;
 use App\Models\Post;
 
+// ------------------------------------------------
+// Public Home Page
+// ------------------------------------------------
 Route::get('/', function () {
-    // Redirect authenticated employers to their dashboard
+    // If employer is logged in, send them to employer dashboard
     if (Auth::guard('employer')->check()) {
         return redirect()->route('employer.dashboard');
     }
-
-    // Redirect authenticated users to HomePage
+    // If normal user is logged in, send them to HomePage
     if (Auth::check()) {
         return redirect()->route('HomePage');
     }
-
-    // Fetch posts for guests - only job offers
+    // If guest, show homepage with featured posts
     $featuredPosts = Post::where('post_type', 'job_offer')
                          ->where('featured', true)
                          ->latest('published_at')
@@ -43,61 +45,97 @@ Route::get('/', function () {
     return view('home', compact('featuredPosts', 'latestPosts'));
 })->name('home');
 
-
-
-// Employer Authentication and Dashboard Routes
-// Employer Authentication and Dashboard Routes
+// ------------------------------------------------
+// Employer Authentication + Routes
+// ------------------------------------------------
 Route::prefix('employer')->group(function () {
-    // Employer Auth Routes
-    Route::get('register', [EmployerRegisterController::class, 'showRegistrationForm'])->name('employer.register');
-    Route::post('register', [EmployerRegisterController::class, 'register']);
-    Route::get('login', [EmployerLoginController::class, 'showLoginForm'])->name('employer.login');
-    Route::post('login', [EmployerLoginController::class, 'login'])->name('employer.login.post');
-    Route::post('logout', [EmployerLoginController::class, 'logout'])->name('employer.logout');
+    // -- Employer Auth Pages --
+    Route::get('/register', [EmployerRegisterController::class, 'showRegistrationForm'])->name('employer.register');
+    Route::post('/register', [EmployerRegisterController::class, 'register']);
+    Route::get('/login', [EmployerLoginController::class, 'showLoginForm'])->name('employer.login');
+    Route::post('/login', [EmployerLoginController::class, 'login'])->name('employer.login.post');
+    Route::post('/logout', [EmployerLoginController::class, 'logout'])->name('employer.logout');
 
-    // Employer Dashboard and Authenticated Routes
-    Route::middleware(['auth:employer'])->group(function () {
+    // -- Employer-Only Routes (need auth:employer) --
+    Route::middleware('auth:employer')->group(function () {
+
+        // Employer Dashboard
         Route::get('/dashboard', [EmployerDashboardController::class, 'index'])->name('employer.dashboard');
+
+        // Employer’s own posts
         Route::get('/MyPosts', [PortfolioController::class, 'index'])->name('employer.portfolios');
         Route::get('/Create', [MakePostController::class, 'index'])->name('employer.make_post');
         Route::post('/posts', [PostController::class, 'store'])->name('employer.posts.store');
+
+        // Profile
         Route::get('/profile', [CustomProfileController::class, 'show'])->name('employer.custom.profile.show');
         Route::post('/profile/update', [CustomProfileController::class, 'update'])->name('employer.custom.profile.update');
+
+        // Employer Posts
         Route::get('/posts', [PostController::class, 'index'])->name('employer.posts');
         Route::get('/posts/{post}', [PostController::class, 'show'])->name('employer.posts.show');
         Route::get('/AllPosts', [ShowAllPosts::class, 'index'])->name('employer.all_posts');
-        Route::post('/logout', [EmployerLoginController::class, 'logout'])->name('employer.logout');
+
+        // Comments on employer posts
         Route::post('/posts/{post}/comments', [CommentController::class, 'store'])->name('employer.post.comments.store');
         Route::get('/posts/{post}/comments', [CommentController::class, 'index'])->name('employer.post.comments');
         Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('employer.comments.destroy');
-        Route::get('{post}/applicants', [PostController::class, 'viewApplicants'])->name('posts.applicants')->middleware('auth:employer');
+
+        // View applicants
+        Route::get('{post}/applicants', [PostController::class, 'viewApplicants'])
+            ->name('posts.applicants');
+
+        // Toggle post active/inactive
+        Route::delete('/posts/{id}', [PostController::class, 'destroy'])
+            ->name('employer.posts.destroy');
+
+
+
+
+
     });
 });
 
-// Shared Home Page and User Routes
+// ------------------------------------------------
+// Normal User Routes (Jetstream + your user.guard)
+// ------------------------------------------------
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
     'verified',
-    'user.guard',
+    'user.guard',  // ensure this is set up properly
 ])->group(function () {
-    // User Dashboard
 
+    // Example user dashboard
     Route::get('/HomePage', [DashboardController::class, '__invoke'])->name('HomePage');
-    // Other User-Specific Routes
+
+    // User’s own posts (if you allow that)
     Route::get('/MyPosts', [PortfolioController::class, 'index'])->name('portfolios.index');
     Route::get('/Create', [MakePostController::class, 'index'])->name('make_post.index');
     Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
+
+    // User profile
     Route::get('/profile', [CustomProfileController::class, 'show'])->name('custom.profile.show');
     Route::post('/profile/update', [CustomProfileController::class, 'update'])->name('custom.profile.update');
     Route::post('/profile/upload-cv', [CustomProfileController::class, 'uploadCV'])->name('profile.upload-cv');
     Route::post('/profile/generate-cv', [CustomProfileController::class, 'generateCV'])->name('profile.generate-cv');
+
+    // User sees posts (for example, only 'job_offer' posts)
     Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
     Route::get('/posts/{post}', [PostController::class, 'show'])->name('posts.show');
     Route::get('/AllPosts', [ShowAllPosts::class, 'index'])->name('all_posts.index');
+
+    // Comments (for normal user)
     Route::post('/posts/{post}/comments', [CommentController::class, 'store'])->name('post.comments.store');
     Route::get('/posts/{post}/comments', [CommentController::class, 'index'])->name('post.comments.index');
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
+
+    // Apply to a job post
     Route::post('/posts/{post}/apply', [PostController::class, 'apply'])->name('posts.apply');
+
+    // Inside Route::middleware([... 'user.guard', ...])...
+    Route::delete('/posts/{id}', [PostController::class, 'destroy'])
+            ->name('posts.destroy');
+
 
 });

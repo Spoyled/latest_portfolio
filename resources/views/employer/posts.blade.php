@@ -55,6 +55,20 @@
                     </a>
                 @endif
             </div>
+
+            @if (auth('employer')->check() && auth('employer')->id() === $post->employer_id)
+                <form action="{{ route('employer.posts.destroy', $post->id) }}" method="POST" class="inline-block">
+                    @csrf
+                    @method('DELETE') 
+                    <button
+                        type="submit"
+                        class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
+                        onclick="return confirm('Are you sure you want to delete this post?');"
+                    >
+                        Delete Post
+                    </button>
+                </form>
+            @endif
         </div>
     </div>
 </main>
@@ -91,8 +105,12 @@
                         name="cv_file" 
                         id="cv_file" 
                         class="block w-full mt-2 p-2 border rounded"
+                        accept=".pdf,.doc,.docx" <!-- Frontend Validation -->
                         required
                     >
+                    @if ($errors->has('cv_file'))
+                        <span class="text-red-500 text-sm">{{ $errors->first('cv_file') }}</span>
+                    @endif
                 </div>
                 <div class="flex justify-between items-center">
                     <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
@@ -105,6 +123,7 @@
             </form>
         </div>
     </div>
+
 @endif
 
 <script>
@@ -122,7 +141,7 @@
 <!-- Comments Section -->
 <div class="bg-white py-8 px-6 shadow rounded-lg my-6 container mx-auto">
     <div class="mb-4">
-        <h2 class="text-2xl font-bold text-gray-900">Comments</h2>
+        <h2 class="text-2xl font-bold text-gray-900">Information</h2>
         <div class="border-b-2 border-gray-200 my-2"></div>
     </div>
 
@@ -148,6 +167,7 @@
             </div>
         @endforeach
     </div>
+    
 
     <!-- Add Comment Form -->
     @if(Auth::check() && (Auth::id() === $post->user_id || auth('employer')->check()))

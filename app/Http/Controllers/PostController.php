@@ -87,16 +87,10 @@ class PostController extends Controller
 
     public function index()
     {
-        if (auth('employer')->check()) {
-            // Employers see only resume posts
-            $posts = Post::where('post_type', 'resume')->latest('published_at')->paginate(10);
-        } else {
-            // Regular users see only job offer posts
-            $posts = Post::where('post_type', 'job_offer')->latest('published_at')->paginate(10);
-        }
-
-        return view('posts.index', compact('posts'));
+        $posts = Post::all(); 
+        return view('posts', compact('posts'));
     }
+
 
     public function viewApplicants($postId)
     {
@@ -109,6 +103,43 @@ class PostController extends Controller
 
         return view('employer.applicants', ['post' => $post]);
     }
+
+    public function destroy($id)
+    {
+        $post = Post::findOrFail($id);
+
+        // If an employer is logged in, check employer ownership
+        if (auth('employer')->check()) {
+            if (auth('employer')->id() !== $post->employer_id) {
+                abort(403, 'You do not own this post.');
+            }
+            // Delete the post
+            $post->delete();
+
+            // Redirect employer to /employer/MyPosts
+            return redirect()
+                ->route('employer.portfolios')
+                ->with('status', 'Post deleted successfully!');
+        }
+
+        // Otherwise, check if a normal user is logged in
+        elseif (auth()->check()) {
+            if (auth()->id() !== $post->user_id) {
+                abort(403, 'You do not own this post.');
+            }
+            // Delete the post
+            $post->delete();
+
+            // Redirect user to /MyPosts
+            return redirect()
+                ->route('portfolios.index')
+                ->with('status', 'Post deleted successfully!');
+        }
+
+        // No authenticated user at all?
+        abort(403, 'Unauthorized action.');
+    }
+
 
 
 

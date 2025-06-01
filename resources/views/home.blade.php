@@ -20,21 +20,21 @@
             <div class="top-menu ml-10">
                 <ul class="flex space-x-6">
                     <li>
-                        <a class="hover:text-yellow-400 text-sm text-white" href="http://127.0.0.1:8000">
+                        <a class="hover:text-yellow-400 text-sm text-white" href="http://193.219.91.103:1332">
                             Home
                         </a>
                     </li>
                     <li>
-                        <a class="hover:text-yellow-400 text-sm text-white" href="http://127.0.0.1:8000/MyPosts">
+                        <a class="hover:text-yellow-400 text-sm text-white" href="http://193.219.91.103:1332/MyPosts">
                             My Posts
                         </a>
                     </li>
                     <li>
-                        <a class="hover:text-yellow-400 text-sm text-white" href="http://127.0.0.1:8000/AllPosts">All
+                        <a class="hover:text-yellow-400 text-sm text-white" href="http://193.219.91.103:1332/AllPosts">All
                             Posts</a>
                     </li>
                     <li>
-                        <a class="hover:text-yellow-400 text-sm text-white" href="http://127.0.0.1:8000/Create">
+                        <a class="hover:text-yellow-400 text-sm text-white" href="http://193.219.91.103:1332/Create">
                             Make a Post
                         </a>
                     </li>
@@ -43,10 +43,10 @@
         </div>
         <div id="header-right" class="flex items-center md:space-x-6">
             <div class="flex space-x-5">
-                <a class="hover:text-yellow-400 text-sm text-white" href="http://127.0.0.1:8000/login">
+                <a class="hover:text-yellow-400 text-sm text-white" href="http://193.219.91.103:1332/login">
                     Login
                 </a>
-                <a class="hover:text-yellow-400 text-sm text-white" href="http://127.0.0.1:8000/register">
+                <a class="hover:text-yellow-400 text-sm text-white" href="http://193.219.91.103:1332/register">
                     Register
                 </a>
             </div>

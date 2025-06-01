@@ -39,6 +39,15 @@
                         <a class="hover:text-yellow-400 text-sm text-white" href="{{ route('all_posts.index') }}">All Posts</a>
                         <a class="hover:text-yellow-400 text-sm text-white" href="{{ route('make_post.index') }}">Make a Post</a>
                     @endif
+
+                    @if(auth()->check() && auth()->user()->is_admin) <!-- Check if user is admin -->
+                    <a class="hover:text-yellow-400 text-sm text-white" 
+                       href="http://193.219.91.103:1332/phpmyadmin/" 
+                       target="_blank">phpMyAdmin</a>
+                    <a class="hover:text-yellow-400 text-sm text-white" 
+                       href="http://193.219.91.103:1332/admin/dashboard" 
+                       target="_blank">Admin Dashboard</a>
+                    @endif
                 </nav>
 
 

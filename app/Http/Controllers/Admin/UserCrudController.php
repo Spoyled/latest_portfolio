@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Requests\UserRequest;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
-use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
+use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD; // Correct facade import
+use Illuminate\Support\Facades\Hash;
 
 /**
  * Class UserCrudController
  * @package App\Http\Controllers\Admin
- * @property-read \Backpack\CRUD\app\Library\CrudPanel\CrudPanel $crud
  */
 class UserCrudController extends CrudController
 {
@@ -19,11 +18,6 @@ class UserCrudController extends CrudController
     use \Backpack\CRUD\app\Http\Controllers\Operations\DeleteOperation;
     use \Backpack\CRUD\app\Http\Controllers\Operations\ShowOperation;
 
-    /**
-     * Configure the CrudPanel object. Apply settings to all operations.
-     * 
-     * @return void
-     */
     public function setup()
     {
         CRUD::setModel(\App\Models\User::class);
@@ -31,46 +25,47 @@ class UserCrudController extends CrudController
         CRUD::setEntityNameStrings('user', 'users');
     }
 
-    /**
-     * Define what happens when the List operation is loaded.
-     * 
-     * @see  https://backpackforlaravel.com/docs/crud-operation-list-entries
-     * @return void
-     */
     protected function setupListOperation()
     {
-        CRUD::setFromDb(); // set columns from db columns.
-
-        /**
-         * Columns can be defined using the fluent syntax:
-         * - CRUD::column('price')->type('number');
-         */
+        CRUD::setFromDb(); // Automatically set columns based on the database
     }
 
-    /**
-     * Define what happens when the Create operation is loaded.
-     * 
-     * @see https://backpackforlaravel.com/docs/crud-operation-create
-     * @return void
-     */
     protected function setupCreateOperation()
     {
         CRUD::setValidation([
-            // 'name' => 'required|min:2',
+            'name' => 'required|string|min:2',
+            'email' => 'required|email|unique:users,email',
         ]);
-        CRUD::setFromDb(); // set fields from db columns.
-
-        CRUD::field('is_admin');
+    
+        CRUD::addField(['name' => 'name', 'type' => 'text']);
+        CRUD::addField(['name' => 'email', 'type' => 'email']);
+    
+        // Call your custom method:
+        $this->setupSaveOperation();
     }
-
-    /**
-     * Define what happens when the Update operation is loaded.
-     * 
-     * @see https://backpackforlaravel.com/docs/crud-operation-update
-     * @return void
-     */
+    
     protected function setupUpdateOperation()
     {
-        $this->setupCreateOperation();
+        CRUD::setValidation([
+            'name'     => 'required|min:2',
+            'email'    => 'required|email|unique:users,email,' . $this->crud->getCurrentEntryId(),
+        ]);
+    
+        CRUD::addField(['name' => 'name', 'type' => 'text']);
+        CRUD::addField(['name' => 'email', 'type' => 'email']);
+    
+        // Call your custom method:
+        $this->setupSaveOperation();
     }
+    
+
+
+
+
+    protected function setupSaveOperation()
+    {
+    }
+
+
+
 }

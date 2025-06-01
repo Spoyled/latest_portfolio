@@ -28,7 +28,7 @@ class ProjectCrudController extends CrudController
     {
         CRUD::setModel(\App\Models\Post::class);
         CRUD::setRoute(config('backpack.base.route_prefix') . '/project');
-        CRUD::setEntityNameStrings('project', 'projects');
+        CRUD::setEntityNameStrings('project', 'posts');
 
     }
 

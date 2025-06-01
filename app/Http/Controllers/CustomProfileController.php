@@ -110,7 +110,7 @@ class CustomProfileController extends Controller
 
         // Add profile picture if exists
         if ($user->profile_photo_path) {
-            $photoPath = storage_path('app/public/profile_photos/' . $user->profile_photo_path);
+            $photoPath = storage_path("app/public/profile_photos/{$user->profile_photo_path}");
             if (file_exists($photoPath)) {
                 $section->addImage(
                     $photoPath,

@@ -51,7 +51,7 @@
 
 <div class="bg-white py-8 px-6 shadow rounded-lg my-6">
     <div class="mb-4">
-        <h2 class="text-2xl font-bold text-gray-900">Comments</h2>
+        <h2 class="text-2xl font-bold text-gray-900">Communication</h2>
         <div class="border-b-2 border-gray-200 my-2"></div>
     </div>
 
