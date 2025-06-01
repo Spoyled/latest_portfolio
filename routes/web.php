@@ -67,6 +67,10 @@ Route::prefix('employer')->group(function () {
         Route::get('/Create', [MakePostController::class, 'index'])->name('employer.make_post');
         Route::post('/posts', [PostController::class, 'store'])->name('employer.posts.store');
 
+        Route::get('posts/{post}/edit', [PostController::class, 'edit'])->name('employer.posts.edit');
+        Route::put('/posts/{post}', [PostController::class, 'update'])->name('employer.posts.update');
+        
+
         // Profile
         Route::get('/profile', [CustomProfileController::class, 'show'])->name('employer.custom.profile.show');
         Route::post('/profile/update', [CustomProfileController::class, 'update'])->name('employer.custom.profile.update');
@@ -75,6 +79,10 @@ Route::prefix('employer')->group(function () {
         Route::get('/posts', [PostController::class, 'index'])->name('employer.posts');
         Route::get('/posts/{post}', [PostController::class, 'show'])->name('employer.posts.show');
         Route::get('/AllPosts', [ShowAllPosts::class, 'index'])->name('employer.all_posts');
+        Route::patch('/posts/{post}/applicants/{user}/recruit', [PostController::class, 'markAsRecruited'])->name('applicants.recruit');
+        Route::patch('/posts/{post}/applicants/{user}/decline', [PostController::class, 'declineApplicant'])->name('applicants.decline');
+
+
 
         // Comments on employer posts
         Route::post('/posts/{post}/comments', [CommentController::class, 'store'])->name('employer.post.comments.store');
@@ -88,13 +96,18 @@ Route::prefix('employer')->group(function () {
         // Toggle post active/inactive
         Route::delete('/posts/{id}', [PostController::class, 'destroy'])
             ->name('employer.posts.destroy');
-
-
-
-
-
     });
 });
+
+
+Route::post('/posts/{post}/close', [PostController::class, 'close'])
+    ->middleware(['web', 'auth:employer'])
+    ->name('posts.close');
+
+
+Route::post('/posts/{post}/comments', [CommentController::class, 'store'])
+     ->name('post.comments.store');
+
 
 // ------------------------------------------------
 // Normal User Routes (Jetstream + your user.guard)
@@ -120,13 +133,15 @@ Route::middleware([
     Route::post('/profile/upload-cv', [CustomProfileController::class, 'uploadCV'])->name('profile.upload-cv');
     Route::post('/profile/generate-cv', [CustomProfileController::class, 'generateCV'])->name('profile.generate-cv');
 
+    Route::get('/posts/{post}/edit', [PostController::class, 'editUser'])->name('posts.edit');
+    Route::put('/posts/{post}', [PostController::class, 'updateUser'])->name('posts.update');
+
     // User sees posts (for example, only 'job_offer' posts)
     Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
     Route::get('/posts/{post}', [PostController::class, 'show'])->name('posts.show');
     Route::get('/AllPosts', [ShowAllPosts::class, 'index'])->name('all_posts.index');
 
     // Comments (for normal user)
-    Route::post('/posts/{post}/comments', [CommentController::class, 'store'])->name('post.comments.store');
     Route::get('/posts/{post}/comments', [CommentController::class, 'index'])->name('post.comments.index');
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
 

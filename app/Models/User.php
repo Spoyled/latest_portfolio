@@ -63,9 +63,10 @@ class User extends Authenticatable
 
     public function appliedPosts()
     {
-        return $this->belongsToMany(Post::class, 'post_user_applications')
+        return $this->belongsToMany(Post::class, 'post_user_applications', 'user_id', 'post_id')
                     ->withPivot('cv_path')
                     ->withTimestamps();
     }
+
 
 }

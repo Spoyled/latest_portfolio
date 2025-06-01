@@ -1,7 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\Admin\BackupController;
+use Rap2hpoutre\LaravelLogViewer\LogViewerController;
 // --------------------------
 // Custom Backpack Routes
 // --------------------------
@@ -20,5 +21,15 @@ Route::group([
     Route::crud('project', 'ProjectCrudController');
     Route::crud('comments', 'CommentsCrudController');
     Route::crud('user-application', 'UserApplicationCrudController');
+
+
+    Route::get('backup', [BackupController::class, 'index'])->name('admin.backup.index');
+    Route::post('backup', [BackupController::class, 'run'])->name('admin.backup.run');
+    Route::get('backup/download/{file}', [BackupController::class, 'download'])->name('admin.backup.download');
+
+    Route::get('logs', [LogViewerController::class, 'index'])->name('admin.logs.index');
+    
+
+
     Route::crud('employers', 'EmployersCrudController');
 }); // this should be the absolute last line of this file

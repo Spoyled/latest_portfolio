@@ -12,17 +12,24 @@
         <div class="mb-10 w-full mt-10">
             <div class="mb-16">
                 <div class="w-full">
-                    <div class="grid grid-cols-3 gap-10 w-full">
-                        @foreach($myPosts as $post)
-                            <div class="md:col-span-1 col-span-3">
-                                <x-posts.post-card_dashboard :post="$post" />
-                            </div>
-                        @endforeach
-                    </div>
+                    @if($myPosts->isEmpty())
+                        <div class="text-center text-gray-600 text-lg py-16">
+                            <p>You haven’t created any posts yet.</p>
+                        </div>
+                    @else
+                        <div class="grid grid-cols-3 gap-10 w-full">
+                            @foreach($myPosts as $post)
+                                <div class="md:col-span-1 col-span-3">
+                                    <x-posts.post-card_dashboard :post="$post" />
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
     </div>
+
 </main>
 
 <!-- Footer (will always be at the bottom) -->

@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use PhpOffice\PhpWord\PhpWord;
+use Illuminate\Support\Facades\Validator;
+
 
 class CustomProfileController extends Controller
 {
@@ -14,26 +16,34 @@ class CustomProfileController extends Controller
         $user = Auth::guard('employer')->check() ? Auth::guard('employer')->user() : Auth::user();
 
         if (Auth::guard('employer')->check()) {
-            // Gather statistics for employers
             $totalJobPosts = $user->posts->count();
             $activeJobPosts = $user->posts()->where('is_active', true)->count();
+            $closedJobPosts = $user->posts()->whereNotNull('closed_at')->count();
             $applicationsReceived = $user->posts()->withCount('applicants')->get()->sum('applicants_count');
 
-            return view('profile.custom', compact('user', 'totalJobPosts', 'activeJobPosts', 'applicationsReceived'));
+            return view('profile.custom', compact(
+                'user',
+                'totalJobPosts',
+                'activeJobPosts',
+                'closedJobPosts',
+                'applicationsReceived'
+            ));
         }
 
-        // For regular users
-        return view('profile.custom', compact('user'));
+        $appliedPosts = $user->appliedPosts()->latest()->get();
+        return view('profile.custom', compact('user', 'appliedPosts'));
     }
+
+
 
 
     public function update(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'profile_photo' => 'nullable|image|max:2048', // Max size 2MB
-            'password' => 'nullable|string|min:8|confirmed', // Validate password only if provided
-            'company_description' => 'nullable|string|max:1000', // Optional field for company description
+            'profile_photo' => 'nullable|image|max:2048', 
+            'password' => 'nullable|string|min:8|confirmed',
+            'company_description' => 'nullable|string|max:1000', 
         ]);
 
         $user = Auth::guard('employer')->check() ? Auth::guard('employer')->user() : Auth::user();
@@ -44,15 +54,15 @@ class CustomProfileController extends Controller
             $user->profile_photo_path = basename($path);
         }
 
-        // Update name
+  
         $user->name = $request->name;
 
-        // Update password if provided
+  
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
         }
 
-        // Update company description if provided
+
         if ($request->filled('company_description')) {
             $user->company_description = $request->company_description;
         }
@@ -85,10 +95,29 @@ class CustomProfileController extends Controller
 
     public function generateCV(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'about_me' => 'required|string|max:1000',
+            'skills' => 'required|string|max:500',
+            'education' => 'nullable|string|max:500',
+        
+            'job_title' => 'nullable|array',
+            'job_title.*' => 'nullable|string|max:255',
+            'company' => 'nullable|array',
+            'company.*' => 'nullable|string|max:255',
+            'duration' => 'nullable|array',
+            'duration.*' => 'nullable|string|max:255',
+            'job_description' => 'nullable|array',
+            'job_description.*' => 'nullable|string|max:1000',
+        ]);
+        
+    
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
         $user = Auth::user();
         $phpWord = new PhpWord();
 
-        // Set default styles
         $phpWord->getDefaultFontName('Arial');
         $phpWord->getDefaultFontSize(12);
 
@@ -99,7 +128,6 @@ class CustomProfileController extends Controller
             'marginBottom' => 1200,
         ]);
 
-        // Add title
         $section->addText(
             "{$user->name}'s CV",
             ['size' => 18, 'bold' => true],
@@ -108,7 +136,6 @@ class CustomProfileController extends Controller
 
         $section->addTextBreak(2);
 
-        // Add profile picture if exists
         if ($user->profile_photo_path) {
             $photoPath = storage_path("app/public/profile_photos/{$user->profile_photo_path}");
             if (file_exists($photoPath)) {
@@ -124,12 +151,11 @@ class CustomProfileController extends Controller
             }
         }
 
-        // Add personal information
         $section->addText("Name: " . $user->name, ['bold' => true]);
         $section->addText("Email: " . $user->email, ['bold' => true]);
         $section->addTextBreak(2);
 
-        // Add About Me section
+       
         $section->addText(
             "About Me",
             ['bold' => true, 'size' => 14],
@@ -142,20 +168,36 @@ class CustomProfileController extends Controller
         );
         $section->addTextBreak(1);
 
-        // Add Work Experience section
-        $section->addText(
-            "Work Experience",
-            ['bold' => true, 'size' => 14],
-            ['alignment' => 'left']
-        );
-        $section->addText(
-            $request->work_experience ?: "No work experience added.",
-            ['italic' => true],
-            ['alignment' => 'left']
-        );
+        $section->addText("Work Experience", ['bold' => true, 'size' => 14]);
+
+        $titles = $request->input('job_title', []);
+        $companies = $request->input('company', []);
+        $durations = $request->input('duration', []);
+        $descriptions = $request->input('job_description', []);
+
+        if (!empty($titles)) {
+            foreach ($titles as $index => $title) {
+                if (trim($title) || trim($companies[$index] ?? '') || trim($durations[$index] ?? '') || trim($descriptions[$index] ?? '')) {
+                    $section->addText("Job #" . ($index + 1), ['bold' => true]);
+                    $section->addText("Job Title: " . ($title ?: 'N/A'));
+                    $section->addText("Company: " . ($companies[$index] ?? 'N/A'));
+                    $section->addText("Duration: " . ($durations[$index] ?? 'N/A'));
+                    $section->addText("Description: " . ($descriptions[$index] ?? 'N/A'));
+                    $section->addTextBreak(1);
+                }
+            }
+        } else {
+            $section->addText("No work experience added.");
+        }
+
         $section->addTextBreak(1);
 
-        // Add Skills section
+        $section->addText("Education", ['bold' => true, 'size' => 14]);
+        $section->addText($request->education ?: "No education details provided.");
+        $section->addTextBreak(1);
+
+
+    
         $section->addText(
             "Skills",
             ['bold' => true, 'size' => 14],
@@ -167,17 +209,24 @@ class CustomProfileController extends Controller
             ['alignment' => 'left']
         );
 
-        // Save Word file
-        $fileName = 'CV_' . $user->id . '.docx';
+      
+        $fileName = 'CV_' . $user->id . '_' . now()->format('Ymd_His') . '.docx';
+
         $filePath = storage_path("app/public/cvs/{$fileName}");
 
-        // Ensure the directory exists
+       
         if (!file_exists(dirname($filePath))) {
             mkdir(dirname($filePath), 0775, true);
         }
 
         $phpWord->save($filePath);
 
-        return response()->download($filePath)->deleteFileAfterSend(true);
+        // Store the file name in the user's cv_path
+        $user->cv_path = 'cvs/' . $fileName;
+
+
+        $user->save();
+
+        return response()->download($filePath);
     }
 }

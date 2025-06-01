@@ -4,6 +4,10 @@ namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
+use App\Models\Post;
+
 
 class Kernel extends ConsoleKernel
 {
@@ -12,7 +16,19 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        $schedule->call(function () {
+            $cutoff = Carbon::now()->subWeeks(2); 
+
+            $posts = Post::whereNotNull('closed_at')
+                ->where('closed_at', '<=', $cutoff)
+                ->get();
+
+            foreach ($posts as $post) {
+                $post->forceDelete(); 
+            }
+        })->everyMinute();
+
+        $schedule->command('backups:clean-old')->everyMinute();
     }
 
     /**
@@ -21,7 +37,7 @@ class Kernel extends ConsoleKernel
     protected function commands(): void
     {
         $this->load(__DIR__.'/Commands');
-
         require base_path('routes/console.php');
+        
     }
 }

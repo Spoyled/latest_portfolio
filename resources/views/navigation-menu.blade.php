@@ -116,22 +116,39 @@
                                 {{ __('Manage Account') }}
                             </div>
 
-                            <x-dropdown-link href="{{ route('profile.show') }}">
-                                {{ __('Profile') }}
-                            </x-dropdown-link>
+                            <!-- Conditionally show Profile link -->
+                            @if (Auth::guard('employer')->check())
+                                <x-dropdown-link href="{{ route('employer.custom.profile.show') }}">
+                                    {{ __('Profile') }}
+                                </x-dropdown-link>
+                            @else
+                                <x-dropdown-link href="{{ route('custom.profile.show') }}">
+                                    {{ __('Profile') }}
+                                </x-dropdown-link>
+                            @endif
 
                             <div class="border-t border-gray-200"></div>
 
                             <!-- Authentication -->
-                            <form method="POST" action="{{ route('logout') }}" x-data>
-                                @csrf
-
-                                <x-dropdown-link href="{{ route('logout') }}"
-                                         @click.prevent="$root.submit();">
-                                    {{ __('Log Out') }}
-                                </x-dropdown-link>
-                            </form>
+                            @if (Auth::guard('employer')->check())
+                                <form method="POST" action="{{ route('employer.logout') }}" x-data>
+                                    @csrf
+                                    <x-dropdown-link href="{{ route('employer.logout') }}" @click.prevent="$root.submit();">
+                                        {{ __('Log Out') }}
+                                    </x-dropdown-link>
+                                </form>
+                            @else
+                                <form method="POST" action="{{ route('logout') }}" x-data>
+                                    @csrf
+                                    <x-dropdown-link href="{{ route('logout') }}" @click.prevent="$root.submit();">
+                                        {{ __('Log Out') }}
+                                    </x-dropdown-link>
+                                </form>
+                            @endif
                         </x-slot>
+
+
+
                     </x-dropdown>
                 </div>
             </div>

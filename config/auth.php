@@ -36,14 +36,14 @@ return [
     */
 
     'guards' => [
-    'web' => [
-        'driver' => 'session',
-        'provider' => 'users',
-        ],
-    'employer' => [ // Add this
-        'driver' => 'session',
-        'provider' => 'employers',
-        ],
+        'web' => [
+            'driver' => 'session',
+            'provider' => 'users',
+            ],
+        'employer' => [ // Add this
+            'driver' => 'session',
+            'provider' => 'employers',
+            ],
     ],
 
     /*
@@ -64,14 +64,14 @@ return [
     */
 
     'providers' => [
-    'users' => [
-        'driver' => 'eloquent',
-        'model' => App\Models\User::class,
-    ],
-    'employers' => [ // You already have this
-        'driver' => 'eloquent',
-        'model' => App\Models\Employer::class,
-    ],
+        'users' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\User::class,
+        ],
+        'employers' => [ // You already have this
+            'driver' => 'eloquent',
+            'model' => App\Models\Employer::class,
+        ],
 ],
 
 

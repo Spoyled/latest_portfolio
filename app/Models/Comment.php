@@ -15,4 +15,10 @@ class Comment extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function employer()
+    {
+        return $this->belongsTo(\App\Models\Employer::class, 'employer_id');
+    }
+
 }

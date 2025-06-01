@@ -40,7 +40,6 @@ class UserCrudController extends CrudController
         CRUD::addField(['name' => 'name', 'type' => 'text']);
         CRUD::addField(['name' => 'email', 'type' => 'email']);
     
-        // Call your custom method:
         $this->setupSaveOperation();
     }
     
@@ -54,7 +53,6 @@ class UserCrudController extends CrudController
         CRUD::addField(['name' => 'name', 'type' => 'text']);
         CRUD::addField(['name' => 'email', 'type' => 'email']);
     
-        // Call your custom method:
         $this->setupSaveOperation();
     }
     

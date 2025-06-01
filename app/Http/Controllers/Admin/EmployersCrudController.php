@@ -27,7 +27,7 @@ class EmployersCrudController extends CrudController
     public function setup()
     {
         $this->crud->setModel(\App\Models\Employer::class);
-        $this->crud->setRoute(config('backpack.base.route_prefix') . '/employer');
+        $this->crud->setRoute(config('backpack.base.route_prefix') . '/employers');
         $this->crud->setEntityNameStrings('employer', 'employers');
     }
 

@@ -42,6 +42,14 @@
                         aria-label="Download resume PDF">
                         Download PDF
                     </a>
+
+                    @if(auth()->check() && auth()->id() === $post->user_id)
+                        <div class="text-center mt-4">
+                            <a href="{{ route('posts.edit', $post->id) }}" class="inline-block bg-yellow-500 text-white py-2 px-4 rounded-lg font-bold hover:bg-yellow-600 transition">
+                                Edit Post
+                            </a>
+                        </div>
+                    @endif
                 </div>
             </div>
 

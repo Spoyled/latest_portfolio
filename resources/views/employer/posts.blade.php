@@ -25,6 +25,12 @@
                 <p class="text-xl font-semibold text-gray-900 mb-2">Description</p>
                 <p class="text-gray-700 mb-4">{{ $post->body }}</p>
 
+                <p class="text-xl font-semibold text-gray-900 mt-4 mb-2">Location</p>
+                <p class="text-gray-700 mb-4">{{ $post->location }}</p>
+
+                <p class="text-xl font-semibold text-gray-900 mt-4 mb-2">Position</p>
+                <p class="text-gray-700 mb-4">{{ $post->position }}</p>
+
                 <p class="text-xl font-semibold text-gray-900 mt-4 mb-2">Required Skills</p>
                 <p class="text-gray-700 mb-4">{{ $post->skills }}</p>
 
@@ -42,57 +48,59 @@
             </div>
 
             <!-- Applicants Section -->
-            <div class="mt-6">
+             <div class="mt-6">
                 <h2 class="text-2xl font-bold text-gray-900 mb-2">Applicants</h2>
                 <p class="text-gray-700 text-lg mb-4">
                     Total Applicants: <span class="font-bold text-yellow-600">{{ $post->applicants()->count() }}</span>
                 </p>
+
+                
                 @if(auth('employer')->check() && auth('employer')->id() === $post->employer_id)
-                    <!-- Show View Applicants button only to the post owner -->
                     <a href="{{ route('posts.applicants', $post->id) }}" 
                         class="inline-block bg-blue-500 text-white py-2 px-6 rounded-lg font-bold hover:bg-blue-600 transition">
                         View Applicants
                     </a>
                 @endif
-            </div>
 
-            @if (auth('employer')->check() && auth('employer')->id() === $post->employer_id)
-                <form action="{{ route('employer.posts.destroy', $post->id) }}" method="POST" class="inline-block">
-                    @csrf
-                    @method('DELETE') 
-                    <button
-                        type="submit"
-                        class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
-                        onclick="return confirm('Are you sure you want to delete this post?');"
-                    >
-                        Delete Post
-                    </button>
-                </form>
-            @endif
+                @if(auth('employer')->check() && auth('employer')->id() === $post->employer_id)
+                <a href="{{ route('employer.posts.edit', $post->id) }}" 
+                    class="inline-block bg-yellow-500 text-white py-2 px-4 rounded-lg font-bold hover:bg-yellow-600 transition">
+                    Edit Post
+                </a>    
+
+                    <form method="POST" action="{{ route('posts.close', $post->id) }}">
+                        @csrf
+                        <button class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition">
+                            Close Post
+                        </button>
+                    </form>
+                @elseif($post->closed_at)
+                    <p class="text-red-600 font-semibold mt-4">
+                        This post was closed on {{ \Carbon\Carbon::parse($post->closed_at)->format('Y-m-d') }}
+                    </p>
+                @endif
+            </div> 
         </div>
     </div>
 </main>
-
-
-<!-- Apply Section -->
+    
 @if(auth()->check() && !auth('employer')->check())
-    <div class="mt-6 text-center">
-        @if($post->applicants()->where('user_id', auth()->id())->exists())
-            <p class="text-green-600 font-semibold">
-                Thank you for applying! The hiring team will contact you shortly.
-            </p>
-        @else
-            <button 
-                id="applyButton" 
-                class="bg-green-500 text-white px-6 py-2 rounded-lg shadow-md hover:bg-green-600 transition"
-                onclick="openApplyModal()"
-            >
-                Apply
-            </button>
-        @endif
-    </div>
+        <div class="mt-6 text-center">
+            @if($post->applicants()->where('user_id', auth()->id())->exists())
+                <p class="text-green-600 font-semibold">
+                    Thank you for applying! The hiring team will contact you shortly.
+                </p>
+            @else
+                <button 
+                    id="applyButton" 
+                    class="bg-green-500 text-white px-6 py-2 rounded-lg shadow-md hover:bg-green-600 transition"
+                    onclick="openApplyModal()"
+                >
+                    Apply
+                </button>
+            @endif
+        </div>
 
-    <!-- Modal for File Upload -->
     <div id="applyModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
         <div class="bg-white rounded-lg shadow-lg p-6 w-96">
             <h2 class="text-lg font-bold mb-4">Upload Your CV</h2>
@@ -105,13 +113,23 @@
                         name="cv_file" 
                         id="cv_file" 
                         class="block w-full mt-2 p-2 border rounded"
-                        accept=".pdf,.doc,.docx" <!-- Frontend Validation -->
-                        required
+                        accept=".pdf,.doc,.docx"
                     >
+                    <p class="text-sm text-gray-600 mt-1">
+                        (Optional: If you’ve already uploaded or generated a CV, you can apply without uploading again.)
+                    </p>
+
+                    {{-- ✅ Display validation error --}}
                     @if ($errors->has('cv_file'))
-                        <span class="text-red-500 text-sm">{{ $errors->first('cv_file') }}</span>
+                        <p class="text-red-600 text-sm mt-1">{{ $errors->first('cv_file') }}</p>
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function () {
+                                openApplyModal();
+                            });
+                        </script>
                     @endif
                 </div>
+
                 <div class="flex justify-between items-center">
                     <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
                         Submit Application
@@ -149,9 +167,17 @@
     <div class="space-y-4">
         @foreach ($post->comments as $comment)
             <div class="comment p-4 bg-gray-100 rounded-lg" id="comment-{{ $comment->id }}">
-                <p class="font-semibold text-gray-900">
-                    {{ $comment->user ? $comment->user->name : 'Unknown User' }} says:
-                </p>
+            <p class="font-semibold text-gray-900">
+                @if ($comment->user)
+                    {{ $comment->user->name }}
+                @elseif ($comment->employer)
+                    {{ $comment->employer->name }}
+                @else
+                    Unknown User
+                @endif
+                says:
+            </p>
+
                 <p class="text-gray-600">{{ $comment->body }}</p>
 
                 @if(Auth::check() && Auth::user()->is_admin)

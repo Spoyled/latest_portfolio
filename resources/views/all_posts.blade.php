@@ -1,4 +1,4 @@
-<!-- Header -->
+
 @include('layouts.header')
 
 <body class="min-h-screen flex flex-col">
@@ -8,11 +8,11 @@
         </h1>
     </div>
 
-<!-- Filter Section -->
+
 <div class="container mx-auto px-5">
     <form action="" method="GET" class="mb-6 flex flex-wrap items-center justify-end space-x-4">
         @if(!auth('employer')->check())
-            <!-- Salary Filter (Visible for Non-Employers Only) -->
+
             <div class="flex items-center space-x-2">
                 <label for="salary_min" class="text-lg font-medium text-gray-700">Salary:</label>
                 <input 
@@ -21,12 +21,11 @@
                     id="salary_min" 
                     value="{{ $salaryMin }}" 
                     class="p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500 w-24"
-                    placeholder="e.g., 1000"
+                    placeholder="100"
                 >
             </div>
         @endif
 
-        <!-- Name Filter -->
         <div class="flex items-center space-x-2">
             <label for="name_filter" class="text-lg font-medium text-gray-700">Name:</label>
             <input 
@@ -35,41 +34,34 @@
                 id="name_filter" 
                 value="{{ $nameFilter }}" 
                 class="p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500 w-32"
-                placeholder="e.g., IT"
+                placeholder="Name"
             >
         </div>
 
-        <!-- Skills Filter -->
         <div class="flex items-center space-x-2">
-            <label for="skills_filter" class="text-lg font-medium text-gray-700">Skills:</label>
+            <label for="name_filter" class="text-lg font-medium text-gray-700">Location:</label>
             <input 
                 type="text" 
-                name="skills_filter" 
-                id="skills_filter" 
-                value="{{ $skillsFilter }}" 
+                name="location_filter" 
+                id="location_filter" 
+                value="{{ $locationFilter }}" 
                 class="p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500 w-32"
-                placeholder="e.g., Programmer"
+                placeholder="USA"
             >
         </div>
 
-        <!-- Sort Options -->
         <div class="flex items-center space-x-2">
-            <label for="sort" class="text-lg font-medium text-gray-700">Sort:</label>
-            <select 
-                name="sort" 
-                id="sort" 
-                class="p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+            <label for="name_filter" class="text-lg font-medium text-gray-700">Position:</label>
+            <input 
+                type="text" 
+                name="position_filter" 
+                id="position_filter" 
+                value="{{ $positionFilter }}" 
+                class="p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500 w-32"
+                placeholder="Programmer"
             >
-                @if(!auth('employer')->check())
-                    <option value="salary" {{ $sortOption === 'salary' ? 'selected' : '' }}>Salary</option>
-                @endif
-                <option value="default" {{ $sortOption === 'default' ? 'selected' : '' }}>Default</option>
-                <option value="name" {{ $sortOption === 'name' ? 'selected' : '' }}>Name</option>
-                <option value="skills" {{ $sortOption === 'skills' ? 'selected' : '' }}>Skills</option>
-            </select>
         </div>
 
-        <!-- Submit Button -->
         <button 
             type="submit" 
             class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 transition"
@@ -78,8 +70,6 @@
         </button>
     </form>
 </div>
-
-
 
     </div>
 

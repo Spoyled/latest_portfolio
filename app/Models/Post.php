@@ -16,9 +16,12 @@ class Post extends Model
         'body',
         'image',
         'user_id',
+        'location',
+        'position',
         'published_at', 
         'featured',
         'education',
+        'salary',
         'skills',
         'resume',
         'additional_links',
@@ -32,8 +35,8 @@ class Post extends Model
     public function applicants()
     {
         return $this->belongsToMany(User::class, 'post_user_applications')
-                    ->withPivot('cv_path')
-                    ->withTimestamps();
+                ->withPivot('cv_path', 'recruited', 'declined')
+                ->withTimestamps();
     }
 
     public function employer()
