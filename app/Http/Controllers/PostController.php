@@ -6,285 +6,331 @@ use Illuminate\Http\Request;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use App\Services\PostsApi;
+use App\Models\Comment;
+use Illuminate\Support\Facades\Validator; 
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 
 class PostController extends Controller
 {
+    private PostsApi $api;
+
+    public function __construct(PostsApi $api)
+    {
+        $this->api = $api;
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            // For the body, limit to, say, 2000 characters.
-            'body' => 'required|string|max:2000',
-
-            // Only accept images and certain formats (no mp4)
-            // Adjust 'mimes' if you need to allow more or fewer formats.
+            'body'  => 'required|string|max:2000',
             'image' => 'required|file|mimes:jpg,jpeg,png,gif,webp|max:2048',
-
-            // These fields are used conditionally but we can still validate them.
-            'education' => 'nullable|string|max:255', 
-            'skills' => 'required|array', 
+            'education' => 'nullable|string|max:255',
+            'skills' => 'required|array',
             'skills.*' => 'string|max:100',
             'location' => 'required_if:isEmployer,true|max:255',
             'position' => 'required_if:isEmployer,true|max:255',
             'salary' => 'nullable|numeric',
-
-            // We'll force the additional_links to be a valid URL
-            // If you’d prefer not to enforce a URL format, you can use 'string' only.
             'additional_links' => 'nullable|url',
-
-            // Resume only for "simple user" type, restricting to PDF, DOC, DOCX:
             'resume' => 'nullable|file|mimes:pdf,doc,docx|max:2048',
         ]);
 
-        $post = new Post();
+        // failus saugom kaip ir anksčiau (Laravel storage)
+        $imageName = null; $resumeName = null;
+        if ($request->hasFile('image')) {
+            $imageName = basename($request->file('image')->store('public/posts'));
+        }
+        if ($request->hasFile('resume')) {
+            $resumeName = basename($request->file('resume')->store('public/resumes'));
+        }
+
+        // sudedam payload pagal tavo logiką
+        $payload = [
+            'title' => $validated['title'],
+            'body'  => $validated['body'],
+            'additional_links' => $validated['additional_links'] ?? null,
+            'image' => $imageName,
+            'resume'=> $resumeName,
+            'published_at' => now()->toDateTimeString(),
+            'featured' => 0,
+            'is_active' => 1,
+        ];
 
         if (auth('employer')->check()) {
-            // Employer creating a job offer
-            $post->employer_id = auth('employer')->id();
-            $post->name = auth('employer')->user()->name;
-            $post->post_type = 'job_offer';
-            $post->skills = implode(', ', $validated['skills']); // Required for employer
-            $post->location = $validated['location'] ?? null; // Store location
-            $post->position = $validated['position'] ?? null; // Store location
-            $post->salary = $validated['salary'] ?? null;
+            $payload += [
+                'employer_id' => auth('employer')->id(),
+                'name'        => auth('employer')->user()->name,
+                'post_type'   => 'job_offer',
+                'skills'      => implode(', ', $validated['skills']),
+                'location'    => $validated['location'] ?? null,
+                'position'    => $validated['position'] ?? null,
+                'salary'      => $validated['salary'] ?? null,
+            ];
         } elseif (auth()->check()) {
-            // User creating a resume post
-            $post->user_id = auth()->id();
-            $post->name = auth()->user()->name;
-            $post->post_type = 'resume';
-            $post->education = $validated['education'] ?? null;
-            $post->skills = implode(', ', $validated['skills']); // Simple users now can add skills
+            $payload += [
+                'user_id'   => auth()->id(),
+                'name'      => auth()->user()->name,
+                'post_type' => 'resume',
+                'education' => $validated['education'] ?? null,
+                'skills'    => implode(', ', $validated['skills']),
+            ];
         }
 
-        // Common fields
-        $post->title = $validated['title'];
-        $post->body = $validated['body'];
-        $post->additional_links = $validated['additional_links'] ?? null;
+        $created = $this->api->create($payload);
 
-        // Handle image upload
-        if ($request->hasFile('image')) {
-            $post->image = $request->file('image')->store('public/posts');
-            $post->image = basename($post->image);
-        }
-
-        // Handle resume upload for users
-        if ($request->hasFile('resume')) {
-            $post->resume = $request->file('resume')->store('public/resumes');
-            $post->resume = basename($post->resume);
-        }
-
-        $post->published_at = now();
-        $post->featured = 0;
-        $post->save();
-
-        // Redirect based on user type
         return auth('employer')->check()
             ? redirect()->route('employer.dashboard')->with('status', 'Job offer created successfully!')
             : redirect()->route('HomePage')->with('status', 'Resume post created successfully!');
     }
 
-    public function show($id)
-    {
-        $post = Post::with('comments.user')->findOrFail($id);
 
-        if ($post->post_type === 'job_offer') {
-            if (!auth('employer')->check() && $post->closed_at !== null) {
+    public function show(Request $request, $id)
+    {
+        $postArr = $this->api->get($id);
+        if (!$postArr) abort(404);
+
+        $post = (object) $postArr;
+        $postModel = Post::find($id); // may be null, keep if you need it elsewhere
+
+        $comments = \App\Models\Comment::with('user')->where('post_id', $id)->get();
+        $post->comments = $comments;
+
+        // ✔ read applicants from the pivot table directly
+        $applicantsCount = \DB::table('post_user_applications')->where('post_id', $id)->count();
+        $hasApplied = auth()->check()
+            ? \DB::table('post_user_applications')->where('post_id', $id)->where('user_id', auth()->id())->exists()
+            : false;
+
+        $openApply = $request->boolean('apply') || session('openApply', false);
+
+        if (($post->post_type ?? null) === 'job_offer') {
+            if (!auth('employer')->check() && !empty($post->closed_at)) {
                 abort(403, 'This job offer is no longer available.');
             }
-
-            return view('employer.posts', compact('post'));
+            return view('employer.posts', compact('post','postModel','openApply','applicantsCount','hasApplied'));
         }
 
-        if ($post->post_type === 'resume') {
-            return view('posts', compact('post'));
+        if (($post->post_type ?? null) === 'resume') {
+            return view('posts', compact('post', 'postModel', 'openApply', 'applicantsCount', 'hasApplied'));
         }
 
         abort(404, 'Post type not recognized.');
     }
 
-
     public function index()
     {
-        $query = Post::query();
-
-        // If the user is NOT an employer, hide closed posts
-        if (!auth('employer')->check()) {
-            $query->whereNull('closed_at');
+        if (auth('employer')->check()) {
+            // employer sees their own posts, including closed
+            $posts = $this->api->list([
+                'employer_id'    => auth('employer')->id(),
+                'include_closed' => 1,
+            ]);
+        } else {
+            // visitors/users see only open/active job offers
+            $posts = $this->api->list();
+            $posts = array_values(array_filter($posts, function ($p) {
+                $isActive  = (int)($p['is_active'] ?? 1) === 1;
+                $notClosed = empty($p['closed_at']);
+                $isJob     = ($p['post_type'] ?? '') === 'job_offer';
+                return $isActive && $notClosed && $isJob;
+            }));
         }
 
-        $posts = $query->latest()->get();
-
+        $posts = array_map(fn ($p) => (object) $p, $posts);
         return view('posts', compact('posts'));
     }
 
 
 
+
+
     public function viewApplicants($postId)
     {
-        $post = Post::with('applicants')->findOrFail($postId);
+        // 1) Post from API + ownership check
+        $postArr = $this->api->get($postId);
+        if (!$postArr || ($postArr['post_type'] ?? null) !== 'job_offer') abort(404);
+        if ((int)($postArr['employer_id'] ?? 0) !== auth('employer')->id()) abort(403);
 
-        // Ensure only the post's employer can view the applicants
-        if (auth('employer')->id() !== $post->employer_id) {
-            abort(403, 'Unauthorized');
-        }
+        // 2) Applicants from pivot + users
+        $applicants = \DB::table('post_user_applications as pua')
+            ->join('users', 'users.id', '=', 'pua.user_id')
+            ->select(
+                'users.id as user_id', 'users.name', 'users.email',
+                'pua.cv_path', 'pua.recruited', 'pua.declined', 'pua.created_at'
+            )
+            ->where('pua.post_id', $postId)
+            ->orderByDesc('pua.created_at')
+            ->get();
 
-        return view('employer.applicants', ['post' => $post]);
+        // 3) Pass as $post->applicants so your Blade keeps working
+        $post = (object) $postArr;
+        $post->applicants = $applicants;
+
+        return view('employer.applicants', compact('post'));
     }
+
 
     public function markAsRecruited($postId, $userId)
     {
-        $post = Post::findOrFail($postId);
+        $postArr = $this->api->get($postId);
+        if (!$postArr || ($postArr['post_type'] ?? null) !== 'job_offer') abort(404);
+        if ((int)($postArr['employer_id'] ?? 0) !== auth('employer')->id()) abort(403);
 
-        if (auth('employer')->id() !== $post->employer_id) {
-            abort(403);
-        }
-
-        $post->applicants()->updateExistingPivot($userId, [
-            'recruited' => true,
-        ]);
+        DB::table('post_user_applications')
+            ->where('post_id', $postId)
+            ->where('user_id', $userId)
+            ->update(['recruited' => true, 'updated_at' => now()]);
 
         return back()->with('success', 'Applicant marked as recruited.');
     }
 
     public function declineApplicant($postId, $userId)
     {
-        $post = Post::findOrFail($postId);
+        $postArr = $this->api->get($postId);
+        if (!$postArr || ($postArr['post_type'] ?? null) !== 'job_offer') abort(404);
+        if ((int)($postArr['employer_id'] ?? 0) !== auth('employer')->id()) abort(403);
 
-        if (auth('employer')->id() !== $post->employer_id) {
-            abort(403);
-        }
-
-        $post->applicants()->updateExistingPivot($userId, [
-            'declined' => true,
-        ]);
+        DB::table('post_user_applications')
+            ->where('post_id', $postId)
+            ->where('user_id', $userId)
+            ->update(['declined' => true, 'updated_at' => now()]);
 
         return back()->with('success', 'Applicant marked as declined.');
     }
-
-
 
     public function destroy($id)
     {
         $post = Post::findOrFail($id);
 
-        // If an employer is logged in, check employer ownership
         if (auth('employer')->check()) {
             if (auth('employer')->id() !== $post->employer_id) {
                 abort(403, 'You do not own this post.');
             }
-            // Delete the post
-            $post->delete();
-
-            // Redirect employer to /employer/MyPosts
-            return redirect()
-                ->route('employer.portfolios')
-                ->with('status', 'Post deleted successfully!');
-        }
-
-        // Otherwise, check if a normal user is logged in
-        elseif (auth()->check()) {
+            $this->api->delete($id);
+            return redirect()->route('employer.portfolios')->with('status', 'Post deleted successfully!');
+        } elseif (auth()->check()) {
             if (auth()->id() !== $post->user_id) {
                 abort(403, 'You do not own this post.');
             }
-            // Delete the post
-            $post->delete();
-
-            // Redirect user to /MyPosts
-            return redirect()
-                ->route('portfolios.index')
-                ->with('status', 'Post deleted successfully!');
+            $this->api->delete($id);
+            return redirect()->route('portfolios.index')->with('status', 'Post deleted successfully!');
         }
 
-        // No authenticated user at all?
         abort(403, 'Unauthorized action.');
     }
 
 
-
-
     public function apply(Request $request, $postId)
     {
-        $post = Post::findOrFail($postId);
         $user = Auth::user();
 
-        if ($post->applicants()->where('user_id', $user->id)->exists()) {
-            return back()->with('error', 'You have already applied for this job.');
+        $postArr = $this->api->get($postId);
+        if (!$postArr || (($postArr['post_type'] ?? null) !== 'job_offer')) abort(404);
+        if (!empty($postArr['closed_at'])) {
+            return redirect()->route('posts.show', $postId)
+                ->withErrors(['job' => 'This job offer is closed.']);
         }
 
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'cv_file' => 'nullable|file|mimes:pdf,doc,docx|max:2048',
         ]);
+        if ($validator->fails()) {
+            return redirect()->to(route('posts.show', $postId) . '?apply=1')
+                ->withErrors($validator)->withInput()->with('openApply', true);
+        }
 
         if (!$request->hasFile('cv_file') && !$user->cv_path) {
-            return back()
+            return redirect()->to(route('posts.show', $postId) . '?apply=1')
                 ->withErrors(['cv_file' => 'You must upload a CV before applying.'])
-                ->withInput();
+                ->withInput()->with('openApply', true);
         }
 
-        if ($request->hasFile('cv_file')) {
-            $cvPath = $request->file('cv_file')->store('public/cvs');
-            $finalCvPath = basename($cvPath);
-        } else {
-            $finalCvPath = basename($user->cv_path);
+        $finalCvPath = $request->hasFile('cv_file')
+            ? basename($request->file('cv_file')->store('public/cvs'))
+            : basename($user->cv_path);
+
+        $exists = \DB::table('post_user_applications')
+            ->where('post_id', $postId)->where('user_id', $user->id)->exists();
+
+        if (!$exists) {
+            \DB::table('post_user_applications')->updateOrInsert(
+                ['post_id' => $postId, 'user_id' => $user->id],
+                ['cv_path' => $finalCvPath, 'created_at' => now(), 'updated_at' => now()]
+            );
         }
 
-        $post->applicants()->attach($user->id, ['cv_path' => $finalCvPath]);
-
-        return back()->with('success', 'You have successfully applied for this job.');
+        // 👉 Success/Already applied: go back WITHOUT ?apply=1, so modal stays closed
+        return redirect()->route('posts.show', $postId);
     }
 
 
-    public function edit(Post $post)
-    {   
-        if (!auth('employer')->check() || auth('employer')->id() !== $post->employer_id) {
+
+
+
+    public function edit($postId)
+    {
+        // fetch from API and ensure ownership
+        $postArr = $this->api->get($postId);
+        if (!$postArr || ($postArr['post_type'] ?? null) !== 'job_offer') abort(404);
+
+        if ((int)($postArr['employer_id'] ?? 0) !== auth('employer')->id()) {
             abort(403);
         }
 
+        $post = (object) $postArr; // pass as object to the blade
         return view('employer.edit-post', compact('post'));
     }
 
-    public function update(Request $request, Post $post)
+    public function update(Request $request, $postId)
     {
-            if (!auth('employer')->check() || auth('employer')->id() !== $post->employer_id) {
-                abort(403);
+        $postArr = $this->api->get($postId);
+        if (!$postArr || ($postArr['post_type'] ?? null) !== 'job_offer') abort(404);
+        if ((int)($postArr['employer_id'] ?? 0) !== auth('employer')->id()) abort(403);
+
+        $validated = $request->validate([
+            'title' => ['required','string','max:255'],
+            'body'  => ['required','string','max:2000'],
+            'image' => ['nullable','file','mimes:jpg,jpeg,png,gif,webp','max:2048'],
+            'location' => ['required','string','max:255','regex:/^[\pL\s\-]+$/u'],
+            'position' => ['required','string','max:255','regex:/^[\pL\s\-]+$/u'],
+            'salary' => ['nullable','numeric'],
+            'skills' => ['required','string','max:255','regex:/^[\pL\s,]+$/u'],
+            'additional_links' => ['nullable','url'],
+        ]);
+
+        $imageName = $postArr['image'] ?? null;
+        if ($request->hasFile('image')) {
+            try {
+                $imageName = basename($request->file('image')->store('public/posts'));
+            } catch (\Throwable $e) {
+                return back()->withErrors(['image' => 'The image failed to upload.'])->withInput();
             }
+        }
 
-            $validated = $request->validate([
-                'title' => ['required', 'string', 'max:255'],
-                'body' => ['required', 'string', 'max:2000'],
-                'image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,gif,webp', 'max:2048'],
-                'location' => ['required', 'string', 'max:255', 'regex:/^[\pL\s\-]+$/u'],
-                'position' => ['required', 'string', 'max:255', 'regex:/^[\pL\s\-]+$/u'],
-                'salary' => ['nullable', 'numeric'],
-                'skills' => ['required', 'string', 'max:255', 'regex:/^[\pL\s,]+$/u'],
-                'additional_links' => ['nullable', 'url'],
-            ]);
-            
+        $payload = [
+            'title' => $validated['title'],
+            'body'  => $validated['body'],
+            'location' => $validated['location'],
+            'position' => $validated['position'],
+            'salary' => $validated['salary'],
+            'skills' => $validated['skills'],
+            'additional_links' => $validated['additional_links'] ?? null,
+            'image' => $imageName,
+            'name'  => auth('employer')->user()->name,
+            'post_type' => 'job_offer',
+            'employer_id' => auth('employer')->id(),
+            'is_active' => 1,
+        ];
 
-            $post->update([
-                'title' => $validated['title'],
-                'body' => $validated['body'],
-                'location' => $validated['location'],
-                'position' => $validated['position'],
-                'salary' => $validated['salary'],
-                'skills' => $validated['skills'], 
-                'additional_links' => $validated['additional_links'] ?? null,
-            ]);
+        $this->api->update($postId, $payload);
 
-            if ($request->hasFile('image')) {
-                try {
-                    $post->image = basename($request->file('image')->store('public/posts'));
-                    $post->save();
-                } catch (\Exception $e) {
-                    return back()->withErrors(['image' => 'The image failed to upload.'])->withInput();
-                }
-            }
-            
-
-            return redirect()->route('employer.posts.show', $post->id)->with('status', 'Post updated successfully!');
-
+        return redirect()->route('employer.posts.show', $postId)
+            ->with('status', 'Post updated successfully!');
     }
+
 
     public function editUser(Post $post)
     {
@@ -303,57 +349,89 @@ class PostController extends Controller
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'body' => 'required|string|max:2000',
+            'body'  => 'required|string|max:2000',
             'education' => 'nullable|string|max:255|regex:/^[\pL\s,]+$/u',
-            'skills' => 'required|string|max:255|regex:/^[\pL\s,]+$/u',
+            'skills'    => 'required|string|max:255|regex:/^[\pL\s,]+$/u',
             'additional_links' => 'nullable|url',
-            'image' => 'nullable|file|mimes:jpg,jpeg,png,gif,webp|max:2048',
+            'image'  => 'nullable|file|mimes:jpg,jpeg,png,gif,webp|max:2048',
             'resume' => 'nullable|file|mimes:pdf,doc,docx|max:2048',
         ]);
 
-        $post->update([
-            'title' => $validated['title'],
-            'body' => $validated['body'],
-            'education' => $validated['education'],
-            'skills' => $validated['skills'],
-            'additional_links' => $validated['additional_links'] ?? null,
-        ]);
+        $imageName = $post->image;
+        $resumeName = $post->resume;
 
         if ($request->hasFile('image')) {
-            $post->image = basename($request->file('image')->store('public/posts'));
-            $post->save();
+            $imageName = basename($request->file('image')->store('public/posts'));
         }
-
         if ($request->hasFile('resume')) {
-            $post->resume = basename($request->file('resume')->store('public/resumes'));
-            $post->save();
+            $resumeName = basename($request->file('resume')->store('public/resumes'));
         }
 
-        return redirect()->route('posts.show', $post->id)->with('status', 'Resume updated successfully!');
+        $payload = [
+            'title' => $validated['title'],
+            'body'  => $validated['body'],
+            'education' => $validated['education'] ?? null,
+            'skills'    => $validated['skills'],
+            'additional_links' => $validated['additional_links'] ?? null,
+            'image'  => $imageName,
+            'resume' => $resumeName,
+            'name'   => auth()->user()->name,
+            'post_type' => 'resume',
+            'user_id'   => auth()->id(),
+            'is_active' => 1,
+        ];
+
+        $this->api->update($post->id, $payload);
+
+        return redirect()->route('posts.show', $post->id)
+            ->with('status', 'Resume updated successfully!');
     }
 
 
 
+    // app/Http/Controllers/PostController.php
 
-
-    public function close(Post $post)
+    public function close($postId)
     {
-        if (auth('employer')->id() !== $post->employer_id) {
+        $postArr = $this->api->get($postId);
+        if (!$postArr || ($postArr['post_type'] ?? null) !== 'job_offer') abort(404);
+        if ((int)($postArr['employer_id'] ?? 0) !== auth('employer')->id()) abort(403);
 
-            if (request()->expectsJson()) {
-                return response()->json(['error' => 'Unauthorized'], 403);
-            }
-            abort(403);
-        }
+        // Convert published_at to the format your posts service expects
+        $publishedAt = isset($postArr['published_at'])
+            ? Carbon::parse($postArr['published_at'])->format('Y-m-d H:i:s')
+            : now()->toDateTimeString();
 
-        $post->closed_at = now();
-        $post->save();
+        // Build ONLY the fields your posts service validates/fills
+        $payload = [
+            'title'            => $postArr['title']            ?? '',
+            'body'             => $postArr['body']             ?? '',
+            'name'             => $postArr['name']             ?? '',
+            'skills'           => $postArr['skills']           ?? '',
+            'location'         => $postArr['location']         ?? null,
+            'position'         => $postArr['position']         ?? null,
+            'salary'           => $postArr['salary']           ?? null,
+            'image'            => $postArr['image']            ?? null,
+            'additional_links' => $postArr['additional_links'] ?? null,
+            'post_type'        => $postArr['post_type']        ?? 'job_offer',
+            'employer_id'      => $postArr['employer_id']      ?? null,
+            'user_id'          => $postArr['user_id']          ?? null,
+            'published_at'     => $publishedAt,
 
-        if (request()->expectsJson()) {
-            return response()->json(['message' => 'Post closed successfully.']);
-        }
+            // close it
+            'closed_at'        => now()->format('Y-m-d H:i:s'),
+            // do NOT send is_active unless your posts service fillable rules allow it
+            // 'is_active'     => 0,
+        ];
 
-        return back()->with('status', 'Post successfully closed. It will be deleted in 2 weeks.');
+        // Full PUT (your API requires full payload on update)
+        $this->api->update($postId, $payload);
+
+        return back()->with('status', 'Post successfully closed.');
     }
+
+
+
+
 
 }

@@ -10,7 +10,7 @@
 
 
 <div class="container mx-auto px-5">
-    <form action="" method="GET" class="mb-6 flex flex-wrap items-center justify-end space-x-4">
+    <form action="{{ route('all_posts.index') }}" method="GET" class="mb-6 flex flex-wrap items-center justify-end space-x-4">
         @if(!auth('employer')->check())
 
             <div class="flex items-center space-x-2">

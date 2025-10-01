@@ -1,35 +1,23 @@
 <?php
-
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
-    {
+return new class extends Migration {
+    public function up(): void {
+        if (!Schema::hasTable('comments')) return;
         Schema::table('comments', function (Blueprint $table) {
-            // Make 'user_id' nullable in case the commenter is an employer
-            $table->unsignedBigInteger('user_id')->nullable()->change();
-            
-            // Add an employer_id column to store employer’s ID if they comment
-            $table->unsignedBigInteger('employer_id')->nullable()->after('user_id');
-            
-            // If you want a foreign key (optional), do something like:
-            // $table->foreign('employer_id')->references('id')->on('employers')->onDelete('cascade');
+            if (!Schema::hasColumn('comments', 'employer_id')) {
+                $table->unsignedBigInteger('employer_id')->nullable()->after('user_id'); // add FK later if needed
+            }
         });
     }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
+    public function down(): void {
+        if (!Schema::hasTable('comments')) return;
         Schema::table('comments', function (Blueprint $table) {
-            //
+            if (Schema::hasColumn('comments', 'employer_id')) {
+                $table->dropColumn('employer_id');
+            }
         });
     }
 };

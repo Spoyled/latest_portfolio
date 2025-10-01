@@ -81,6 +81,68 @@
                 @endif
             @endif
         </div>
+
+        <!-- Location -->
+        <div class="col-span-6 sm:col-span-4">
+            <x-label for="location" value="{{ __('Location') }}" />
+            <x-input id="location" type="text" class="mt-1 block w-full" wire:model="state.location" autocomplete="location" />
+            <x-input-error for="location" class="mt-2" />
+        </div>
+
+        <!-- Birth Date -->
+        <div class="col-span-6 sm:col-span-4">
+            <x-label for="birth_date" value="{{ __('Birth Date') }}" />
+            <x-input id="birth_date" type="date" class="mt-1 block w-full" wire:model="state.birth_date" />
+            <x-input-error for="birth_date" class="mt-2" />
+        </div>
+
+        <!-- Summary -->
+        <div class="col-span-6">
+            <x-label for="summary" value="{{ __('Summary/Objective') }}" />
+            <textarea id="summary" class="form-input rounded-md shadow-sm mt-1 block w-full" wire:model="state.summary"></textarea>
+            <x-input-error for="summary" class="mt-2" />
+        </div>
+
+        <!-- Skills -->
+        <div class="col-span-6">
+            <x-label for="skills" value="{{ __('Skills (comma-separated)') }}" />
+            <x-input id="skills" type="text" class="mt-1 block w-full" wire:model="state.skills_string" />
+            <x-input-error for="skills" class="mt-2" />
+        </div>
+
+        <!-- Work Experience -->
+        <div class="col-span-6">
+            <x-label value="{{ __('Work Experience') }}" />
+            <div class="space-y-2">
+                @if(isset($state['work_experience']) && is_array($state['work_experience']))
+                    @foreach($state['work_experience'] as $index => $job)
+                        <div class="border p-2 rounded">
+                            <x-input type="text" placeholder="Job Title" class="mt-1 w-full" wire:model="state.work_experience.{{$index}}.title" />
+                            <x-input type="text" placeholder="Company" class="mt-1 w-full" wire:model="state.work_experience.{{$index}}.company" />
+                            <x-input type="text" placeholder="Years (e.g., 2020-2022)" class="mt-1 w-full" wire:model="state.work_experience.{{$index}}.years" />
+                            <textarea placeholder="Description" class="form-input rounded-md shadow-sm mt-1 w-full" wire:model="state.work_experience.{{$index}}.description"></textarea>
+                        </div>
+                    @endforeach
+                @endif
+            </div>
+        </div>
+
+        <!-- Education -->
+        <div class="col-span-6">
+            <x-label value="{{ __('Education') }}" />
+            <div class="space-y-2">
+                @if(isset($state['education']) && is_array($state['education']))
+                    @foreach($state['education'] as $index => $edu)
+                        <div class="border p-2 rounded">
+                            <x-input type="text" placeholder="Degree" class="mt-1 w-full" wire:model="state.education.{{$index}}.degree" />
+                            <x-input type="text" placeholder="Institution" class="mt-1 w-full" wire:model="state.education.{{$index}}.institution" />
+                            <x-input type="text" placeholder="Years (e.g., 2016-2020)" class="mt-1 w-full" wire:model="state.education.{{$index}}.years" />
+                        </div>
+                    @endforeach
+                @endif
+            </div>
+        </div>
+
     </x-slot>
 
     <x-slot name="actions">

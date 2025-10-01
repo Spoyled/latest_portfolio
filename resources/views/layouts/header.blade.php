@@ -42,7 +42,7 @@
 
                     @if(auth()->check() && auth()->user()->is_admin) <!-- Check if user is admin -->
                     <a class="hover:text-yellow-400 text-sm text-white" 
-                       href="http://193.219.91.103:1332/phpmyadmin/" 
+                       href="http://193.219.91.103:8303/" 
                        target="_blank">phpMyAdmin</a>
                     <a class="hover:text-yellow-400 text-sm text-white" 
                        href="http://193.219.91.103:1332/admin/dashboard" 

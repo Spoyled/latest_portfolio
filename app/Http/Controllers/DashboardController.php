@@ -1,30 +1,62 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\Post;
+
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Services\PostsApi;
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
+    private PostsApi $api;
+
+    public function __construct(PostsApi $api)
+    {
+        $this->api = $api;
+    }
+
     public function __invoke(Request $request)
     {
-        $baseQuery = Post::where('post_type', 'job_offer');
+        $all = $this->api->list(); // array<array>
+        $isEmployer = Auth::guard('employer')->check();
 
-        if (!auth('employer')->check()) {
-            $baseQuery->whereNull('closed_at');
-        }
+        // show only active job offers; hide closed for non-employers
+        $visible = array_values(array_filter($all, function ($p) use ($isEmployer) {
+            if (($p['post_type'] ?? null) !== 'job_offer') return false;
+            if (!$isEmployer && !empty($p['closed_at'])) return false;
+            return (int)($p['is_active'] ?? 1) === 1;
+        }));
 
+        // newest first
+        usort($visible, fn ($a, $b) =>
+            strcmp(($b['published_at'] ?? $b['created_at'] ?? ''),
+                   ($a['published_at'] ?? $a['created_at'] ?? ''))
+        );
+
+        // helper: to object + Carbon dates (nice for Blade)
+        $toObj = function (array $p) {
+            $p['published_at'] = isset($p['published_at'])
+                ? Carbon::parse($p['published_at'])
+                : (isset($p['created_at']) ? Carbon::parse($p['created_at']) : null);
+            return (object) $p;
+        };
+
+        // latest (9)
+        $latest = array_map($toObj, array_slice($visible, 0, 9));
+
+        // featured (3)
+        $featuredRaw = array_values(array_filter($visible, fn ($p) => (int)($p['featured'] ?? 0) === 1));
+        usort($featuredRaw, fn ($a, $b) =>
+            strcmp(($b['published_at'] ?? $b['created_at'] ?? ''),
+                   ($a['published_at'] ?? $a['created_at'] ?? ''))
+        );
+        $featured = array_map($toObj, array_slice($featuredRaw, 0, 3));
+
+        // return Collections so ->isEmpty() in Blade works
         return view('dashboard', [
-            'featuredPosts' => (clone $baseQuery)
-                ->where('featured', true)
-                ->latest('published_at')
-                ->take(3)
-                ->get(),
-
-            'latestPosts' => (clone $baseQuery)
-                ->latest('published_at')
-                ->take(9)
-                ->get(),
+            'featuredPosts' => collect($featured),
+            'latestPosts'   => collect($latest),
         ]);
     }
 }

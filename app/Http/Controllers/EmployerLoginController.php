@@ -18,7 +18,8 @@ class EmployerLoginController extends Controller
 
         if (Auth::guard('employer')->attempt($credentials, $request->filled('remember'))) {
             $request->session()->forget('url.intended'); // Clear any intended URL
-            return redirect()->route('employer.dashboard');
+            return redirect()->route('employer.dashboard')
+                ->with('success', 'Welcome back! You have successfully logged in.');
         }
 
         // Redirect back with errors if login fails
