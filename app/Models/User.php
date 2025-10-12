@@ -11,6 +11,8 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
 
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
 class User extends Authenticatable
 {
     use CrudTrait;
@@ -73,10 +75,12 @@ class User extends Authenticatable
 
     public function appliedPosts()
     {
-        return $this->belongsToMany(Post::class, 'post_user_applications', 'user_id', 'post_id')
-                    ->withPivot('cv_path')
-                    ->withTimestamps();
+        return $this->belongsToMany(\App\Models\Post::class, 'post_user_applications', 'user_id', 'post_id')
+            ->withPivot(['cv_path', 'created_at', 'updated_at']);
     }
 
-
+    public function cvVersions()
+    {
+        return $this->hasMany(CvVersion::class)->orderBy('created_at', 'desc');
+    }
 }

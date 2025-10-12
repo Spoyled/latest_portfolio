@@ -16,6 +16,7 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\EmployerRegisterController;
 use App\Http\Controllers\EmployerLoginController;
 use App\Http\Controllers\EmployerDashboardController;
+ 
 use App\Models\Post;
 
 // ------------------------------------------------
@@ -109,7 +110,10 @@ Route::middleware([
     Route::get('/profile', [CustomProfileController::class, 'show'])->name('custom.profile.show');
     Route::post('/profile/update', [CustomProfileController::class, 'update'])->name('custom.profile.update');
     Route::post('/profile/upload-cv', [CustomProfileController::class, 'uploadCV'])->name('profile.upload-cv');
-    Route::post('/profile/generate-cv', [ProfileController::class, 'generateCv'])->name('profile.generate-cv');
+    Route::get('/profile/download-cv/{version?}', [CustomProfileController::class, 'downloadCV'])->name('profile.download-cv');
+    Route::post('/profile/generate-cv', [CustomProfileController::class, 'generateCv'])->name('profile.generate-cv');
+    Route::post('/profile/analyze-cv', [CustomProfileController::class, 'analyzeCv'])->name('profile.analyze-cv');
+    Route::delete('/profile/cv-versions/{version}', [CustomProfileController::class, 'destroyCvVersion'])->name('profile.cv-versions.destroy');
 
     Route::get('/posts/{post}/edit', [PostController::class, 'editUser'])->name('posts.edit');
     Route::put('/posts/{post}', [PostController::class, 'updateUser'])->name('posts.update');
@@ -118,7 +122,6 @@ Route::middleware([
 
     // Comments (for normal user)mi
     Route::get('/posts/{post}/comments', [CommentController::class, 'index'])->name('post.comments.index');
-    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
 
     // Apply to a job post
     Route::post('/posts/{postId}/apply', [PostController::class, 'apply'])->name('posts.apply');

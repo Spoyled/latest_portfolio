@@ -11,6 +11,8 @@ class Post extends Model
     use CrudTrait;
     use HasFactory;
 
+    protected $table = 'prosnap_posts.posts';
+
     protected $fillable = [
         'title',
         'body',
@@ -34,9 +36,8 @@ class Post extends Model
 
     public function applicants()
     {
-        return $this->belongsToMany(User::class, 'post_user_applications')
-                ->withPivot('cv_path', 'recruited', 'declined')
-                ->withTimestamps();
+        return $this->belongsToMany(User::class, 'post_user_applications', 'post_id', 'user_id')
+            ->withPivot(['cv_path', 'created_at', 'updated_at']);
     }
 
     public function employer()

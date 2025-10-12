@@ -11,6 +11,7 @@ use App\Models\Comment;
 use Illuminate\Support\Facades\Validator; 
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Support\ResumeBlueprint;
 
 
 class PostController extends Controller
@@ -24,22 +25,54 @@ class PostController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'body'  => 'required|string|max:2000',
-            'image' => 'required|file|mimes:jpg,jpeg,png,gif,webp|max:2048',
-            'education' => 'nullable|string|max:255',
-            'skills' => 'required|array',
-            'skills.*' => 'string|max:100',
-            'location' => 'required_if:isEmployer,true|max:255',
-            'position' => 'required_if:isEmployer,true|max:255',
-            'salary' => 'nullable|numeric',
-            'additional_links' => 'nullable|url',
-            'resume' => 'nullable|file|mimes:pdf,doc,docx|max:2048',
-        ]);
+        $isEmployer = auth('employer')->check();
 
-        // failus saugom kaip ir anksčiau (Laravel storage)
-        $imageName = null; $resumeName = null;
+        if ($isEmployer) {
+            $validated = $request->validate([
+                'title'          => ['required','string','max:255'],
+                'body'           => ['required','string','max:2000'],
+                'skills'         => ['required','array','min:1'],
+                'skills.*'       => ['string','max:100'],
+                'location'       => ['required','string','max:255','regex:/^[\pL\s\-]+$/u'],
+                'position'       => ['required','string','max:255','regex:/^[\pL\s\-]+$/u'],
+                'salary'         => ['nullable','numeric'],
+                'additional_links' => ['nullable','url'],
+                'image'          => ['required','file','mimes:jpg,jpeg,png,gif,webp','max:2048'],
+            ]);
+
+            $body = $validated['body'];
+            $educationValue = null;
+        } else {
+            $validated = $request->validate([
+                'title'          => ['required','string','max:255'],
+                'summary'        => ['required','string','max:600'],
+                'highlights'     => ['nullable','string','max:600'],
+                'ideal_role'     => ['required','string','max:400'],
+                'collaboration'  => ['nullable','string','max:400'],
+                'availability'   => ['nullable','string','max:300'],
+                'education'      => ['nullable','string','max:255'],
+                'skills'         => ['required','array','min:1'],
+                'skills.*'       => ['string','max:100'],
+                'additional_links' => ['nullable','url'],
+                'image'          => ['required','file','mimes:jpg,jpeg,png,gif,webp','max:2048'],
+                'resume'         => ['nullable','file','mimes:pdf,doc,docx','max:2048'],
+            ]);
+
+            $body = ResumeBlueprint::build([
+                'summary'       => $validated['summary'],
+                'highlights'    => $validated['highlights'] ?? null,
+                'ideal_role'    => $validated['ideal_role'],
+                'collaboration' => $validated['collaboration'] ?? null,
+                'availability'  => $validated['availability'] ?? null,
+            ]);
+
+            $educationValue = $validated['education'] ?? null;
+        }
+
+        $skillsString = implode(', ', $validated['skills']);
+
+        $imageName = null;
+        $resumeName = null;
         if ($request->hasFile('image')) {
             $imageName = basename($request->file('image')->store('public/posts'));
         }
@@ -47,10 +80,9 @@ class PostController extends Controller
             $resumeName = basename($request->file('resume')->store('public/resumes'));
         }
 
-        // sudedam payload pagal tavo logiką
         $payload = [
             'title' => $validated['title'],
-            'body'  => $validated['body'],
+            'body'  => $body,
             'additional_links' => $validated['additional_links'] ?? null,
             'image' => $imageName,
             'resume'=> $resumeName,
@@ -59,12 +91,12 @@ class PostController extends Controller
             'is_active' => 1,
         ];
 
-        if (auth('employer')->check()) {
+        if ($isEmployer) {
             $payload += [
                 'employer_id' => auth('employer')->id(),
                 'name'        => auth('employer')->user()->name,
                 'post_type'   => 'job_offer',
-                'skills'      => implode(', ', $validated['skills']),
+                'skills'      => $skillsString,
                 'location'    => $validated['location'] ?? null,
                 'position'    => $validated['position'] ?? null,
                 'salary'      => $validated['salary'] ?? null,
@@ -74,14 +106,14 @@ class PostController extends Controller
                 'user_id'   => auth()->id(),
                 'name'      => auth()->user()->name,
                 'post_type' => 'resume',
-                'education' => $validated['education'] ?? null,
-                'skills'    => implode(', ', $validated['skills']),
+                'education' => $educationValue,
+                'skills'    => $skillsString,
             ];
         }
 
         $created = $this->api->create($payload);
 
-        return auth('employer')->check()
+        return $isEmployer
             ? redirect()->route('employer.dashboard')->with('status', 'Job offer created successfully!')
             : redirect()->route('HomePage')->with('status', 'Resume post created successfully!');
     }
@@ -94,9 +126,6 @@ class PostController extends Controller
 
         $post = (object) $postArr;
         $postModel = Post::find($id); // may be null, keep if you need it elsewhere
-
-        $comments = \App\Models\Comment::with('user')->where('post_id', $id)->get();
-        $post->comments = $comments;
 
         // ✔ read applicants from the pivot table directly
         $applicantsCount = \DB::table('post_user_applications')->where('post_id', $id)->count();
@@ -338,7 +367,9 @@ class PostController extends Controller
             abort(403);
         }
 
-        return view('edit-post', compact('post'));
+        $sections = ResumeBlueprint::parse($post->body ?? '');
+
+        return view('edit-post', compact('post', 'sections'));
     }
 
     public function updateUser(Request $request, Post $post)
@@ -348,13 +379,26 @@ class PostController extends Controller
         }
 
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'body'  => 'required|string|max:2000',
-            'education' => 'nullable|string|max:255|regex:/^[\pL\s,]+$/u',
-            'skills'    => 'required|string|max:255|regex:/^[\pL\s,]+$/u',
-            'additional_links' => 'nullable|url',
-            'image'  => 'nullable|file|mimes:jpg,jpeg,png,gif,webp|max:2048',
-            'resume' => 'nullable|file|mimes:pdf,doc,docx|max:2048',
+            'title'          => ['required','string','max:255'],
+            'summary'        => ['required','string','max:600'],
+            'highlights'     => ['nullable','string','max:600'],
+            'ideal_role'     => ['required','string','max:400'],
+            'collaboration'  => ['nullable','string','max:400'],
+            'availability'   => ['nullable','string','max:300'],
+            'education'      => ['nullable','string','max:255'],
+            'skills'         => ['required','array','min:1'],
+            'skills.*'       => ['string','max:100'],
+            'additional_links' => ['nullable','url'],
+            'image'          => ['nullable','file','mimes:jpg,jpeg,png,gif,webp','max:2048'],
+            'resume'         => ['nullable','file','mimes:pdf,doc,docx','max:2048'],
+        ]);
+
+        $body = ResumeBlueprint::build([
+            'summary'       => $validated['summary'],
+            'highlights'    => $validated['highlights'] ?? null,
+            'ideal_role'    => $validated['ideal_role'],
+            'collaboration' => $validated['collaboration'] ?? null,
+            'availability'  => $validated['availability'] ?? null,
         ]);
 
         $imageName = $post->image;
@@ -369,9 +413,9 @@ class PostController extends Controller
 
         $payload = [
             'title' => $validated['title'],
-            'body'  => $validated['body'],
+            'body'  => $body,
             'education' => $validated['education'] ?? null,
-            'skills'    => $validated['skills'],
+            'skills'    => implode(', ', $validated['skills']),
             'additional_links' => $validated['additional_links'] ?? null,
             'image'  => $imageName,
             'resume' => $resumeName,

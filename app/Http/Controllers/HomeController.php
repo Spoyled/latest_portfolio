@@ -29,10 +29,12 @@ class HomeController extends Controller
         // fetch from microservice
         $all = $this->api->list(); // array<array>
 
-        // only active & not closed
+        // only active, not closed employer job offers
         $visible = array_values(array_filter($all, function ($p) {
-            return (empty($p['closed_at']) || $p['closed_at'] === null)
-                && (int)($p['is_active'] ?? 1) === 1;
+            $isActive = (int)($p['is_active'] ?? 1) === 1;
+            $isOpen = empty($p['closed_at']);
+            $isJobOffer = ($p['post_type'] ?? '') === 'job_offer';
+            return $isActive && $isOpen && $isJobOffer;
         }));
 
         // map to objects + normalize dates for blade
