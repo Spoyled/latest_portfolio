@@ -24,9 +24,9 @@
 <main class="bg-slate-100">
     <div class="mx-auto max-w-6xl px-6 pb-20 pt-12 sm:px-8">
         <div class="grid gap-10 lg:grid-cols-[1fr,0.8fr]">
-            <section class="rounded-3xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
+            <section class="rounded-3xl bg-white p-8 text-slate-900 shadow-sm ring-1 ring-slate-200">
                 <h2 class="text-2xl font-semibold text-slate-900">Create a candidate account</h2>
-                <p class="mt-2 text-sm text-slate-500">
+                <p class="mt-2 text-sm text-slate-900">
                     Publish a structured resume profile, track ATS feedback, and connect with hiring teams in minutes.
                 </p>
 
@@ -38,7 +38,7 @@
                     <x-validation-errors class="mb-4" />
 
                     <label class="flex flex-col gap-2">
-                        <span class="text-sm font-semibold text-slate-700">Full name</span>
+                        <span class="text-sm font-semibold text-slate-900">Full name</span>
                         <x-input id="name"
                                  class="block mt-1 w-full"
                                  type="text"
@@ -50,7 +50,7 @@
                     </label>
 
                     <label class="flex flex-col gap-2">
-                        <span class="text-sm font-semibold text-slate-700">Email</span>
+                        <span class="text-sm font-semibold text-slate-900">Email</span>
                         <x-input id="email"
                                  class="block mt-1 w-full"
                                  type="email"
@@ -61,18 +61,18 @@
                     </label>
 
                     <label class="flex flex-col gap-2">
-                        <span class="text-sm font-semibold text-slate-700">Password</span>
+                        <span class="text-sm font-semibold text-slate-900">Password</span>
                         <x-input id="password"
                                  class="block mt-1 w-full"
                                  type="password"
                                  name="password"
                                  required
                                  autocomplete="new-password" />
-                        <span class="text-xs text-slate-400">Minimum 8 characters. Mix letters, numbers, and symbols for best security.</span>
+                        <span class="text-xs text-slate-800">Minimum 8 characters. Mix letters, numbers, and symbols for best security.</span>
                     </label>
 
                     <label class="flex flex-col gap-2">
-                        <span class="text-sm font-semibold text-slate-700">Confirm password</span>
+                        <span class="text-sm font-semibold text-slate-900">Confirm password</span>
                         <x-input id="password_confirmation"
                                  class="block mt-1 w-full"
                                  type="password"
@@ -81,17 +81,17 @@
                                  autocomplete="new-password" />
                     </label>
 
-                    <div class="flex flex-col gap-4">
+                    <div class="flex flex-col gap-4 text-slate-900">
                         <x-button class="w-full justify-center bg-blue-600 hover:bg-blue-700">
                             {{ __('Create account') }}
                         </x-button>
-                        <p class="text-sm text-slate-500">
+                        <p class="text-sm text-slate-900">
                             Already have an account?
                             <a href="{{ route('login') }}" class="font-semibold text-blue-600 hover:text-blue-700">
                                 Log in
                             </a>
                         </p>
-                        <p class="text-sm text-slate-500">
+                        <p class="text-sm text-slate-900">
                             Hiring talent?
                             <a href="{{ route('employer.register') }}" class="font-semibold text-blue-600 hover:text-blue-700">
                                 Create an employer account
@@ -102,9 +102,9 @@
             </section>
 
             <aside class="space-y-6">
-                <div class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+                <div class="rounded-3xl border border-slate-200 bg-white p-8 text-slate-900 shadow-sm">
                     <h3 class="text-lg font-semibold text-slate-900">Why candidates love ProSnap</h3>
-                    <ul class="mt-3 space-y-3 text-sm text-slate-600">
+                    <ul class="mt-3 space-y-3 text-sm text-slate-900">
                         <li class="flex gap-3">
                             <span class="inline-flex h-2 w-2 rounded-full bg-blue-600"></span>
                             Structured storytelling that highlights wins, collaboration style, and availability.
@@ -120,9 +120,9 @@
                     </ul>
                 </div>
 
-                <div class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+                <div class="rounded-3xl border border-slate-200 bg-white p-8 text-slate-900 shadow-sm">
                     <h3 class="text-lg font-semibold text-slate-900">Need an employer account?</h3>
-                    <p class="mt-3 text-sm text-slate-600">
+                    <p class="mt-3 text-sm text-slate-900">
                         Publish roles, manage applicants, and collaborate with your hiring squad from a single workspace.
                     </p>
                     <a href="{{ route('employer.register') }}"

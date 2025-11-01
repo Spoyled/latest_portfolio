@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -35,12 +36,56 @@ class CustomProfileController extends Controller
             $closedJobPosts = $user->posts()->whereNotNull('closed_at')->count();
             $applicationsReceived = $user->posts()->withCount('applicants')->get()->sum('applicants_count');
 
+            $recentJobPosts = $user->posts()
+                ->withCount('applicants')
+                ->orderByDesc('created_at')
+                ->take(5)
+                ->get();
+
+            $activeRoles = $user->posts()
+                ->withCount('applicants')
+                ->whereNull('closed_at')
+                ->orderByDesc('created_at')
+                ->take(4)
+                ->get();
+
+            $latestApplicantActivities = collect(
+                DB::table('post_user_applications as pua')
+                    ->join('prosnap_posts.posts as posts', 'pua.post_id', '=', 'posts.id')
+                    ->join('users', 'pua.user_id', '=', 'users.id')
+                    ->where('posts.employer_id', $user->id)
+                    ->orderByDesc('pua.created_at')
+                    ->limit(5)
+                    ->get([
+                        'pua.created_at',
+                        'pua.updated_at',
+                        'pua.recruited',
+                        'pua.declined',
+                        'pua.cv_path',
+                        'posts.id as post_id',
+                        'posts.title as post_title',
+                        'posts.location as post_location',
+                        'posts.closed_at',
+                        'users.id as user_id',
+                        'users.name as user_name',
+                        'users.email as user_email',
+                    ])
+            )->map(function ($activity) {
+                $activity->created_at = $activity->created_at ? Carbon::parse($activity->created_at) : null;
+                $activity->updated_at = $activity->updated_at ? Carbon::parse($activity->updated_at) : null;
+
+                return $activity;
+            });
+
             return view('profile.custom', compact(
                 'user',
                 'totalJobPosts',
                 'activeJobPosts',
                 'closedJobPosts',
-                'applicationsReceived'
+                'applicationsReceived',
+                'recentJobPosts',
+                'activeRoles',
+                'latestApplicantActivities'
             ));
         }
 
@@ -130,13 +175,25 @@ class CustomProfileController extends Controller
                 ->withErrors(['cv_versions' => 'You can store up to 3 generated CVs. Delete an older version to create a new one.']);
         }
 
-        $cvData = $this->prepareCvData($input, $user);
-        $analysis = $this->atsCheckerService->analyze($cvData);
+        $cvData    = $this->prepareCvData($input, $user);
+        $analysis  = $this->atsCheckerService->analyze($cvData);
+        $latestVersion = $user->cvVersions()->orderBy('version_number', 'desc')->first();
+        $versionNumber = $latestVersion ? $latestVersion->version_number + 1 : 1;
 
         $cvData['analysis_snapshot'] = [
             'score' => $analysis['atsScore'] ?? null,
             'warnings' => $analysis['warnings'] ?? [],
             'highlights' => $analysis['highlights'] ?? [],
+            'breakdown' => $analysis['scoreBreakdown'] ?? [],
+        ];
+
+        $cvData['meta']['version_number'] = $versionNumber;
+
+        $verificationHash = hash('sha256', Str::uuid()->toString() . '|' . $user->getKey() . '|' . microtime(true));
+        $verificationUrl  = route('cv.verify', ['hash' => $verificationHash]);
+        $cvData['meta']['verification'] = [
+            'hash' => $verificationHash,
+            'url'  => $verificationUrl,
         ];
 
         $filePath = $this->cvGeneratorService->generate(
@@ -144,16 +201,13 @@ class CustomProfileController extends Controller
             $input['template']
         );
 
-        $latestVersion = $user->cvVersions()->orderBy('version_number', 'desc')->first();
-        $versionNumber = $latestVersion ? $latestVersion->version_number + 1 : 1;
-
         $storedVersion = CvVersion::create([
             'user_id' => $user->id,
             'file_path' => $filePath,
             'template' => $input['template'],
             'language' => 'en',
             'is_anonymized' => false,
-            'sha256_hash' => null,
+            'sha256_hash' => $verificationHash,
             'version_number' => $versionNumber,
             'notes' => $input['notes'] ?? null,
             'data' => $cvData,
@@ -210,6 +264,7 @@ class CustomProfileController extends Controller
             'about_me' => 'required|string|max:2000',
             'professional_headline' => 'nullable|string|max:120',
             'target_role' => 'nullable|string|max:120',
+            'phone' => 'nullable|string|max:32',
             'location' => 'nullable|string|max:160',
             'skills' => 'required|array|min:1',
             'skills.*.name' => 'required|string|max:100',
@@ -266,6 +321,7 @@ class CustomProfileController extends Controller
             'about_me' => 'professional summary',
             'professional_headline' => 'professional headline',
             'target_role' => 'target role',
+            'phone' => 'phone number',
             'location' => 'location',
             'skills.*.name' => 'skill name',
             'skills.*.level' => 'skill level',
@@ -341,7 +397,7 @@ class CustomProfileController extends Controller
             'name' => $user?->name,
             'headline' => $headline,
             'email' => $user?->email,
-            'phone' => $user?->phone ?? null,
+            'phone' => $this->cleanString($input['phone'] ?? ($user?->phone ?? '')),
             'location' => $primaryLocation,
             'about' => $summary,
             'skills' => $skills,

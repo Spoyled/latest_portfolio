@@ -24,9 +24,9 @@
 <main class="bg-slate-100">
     <div class="mx-auto max-w-6xl px-6 pb-20 pt-12 sm:px-8">
         <div class="grid gap-10 lg:grid-cols-[1fr,0.8fr]">
-            <section class="rounded-3xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
+            <section class="rounded-3xl bg-white p-8 text-slate-900 shadow-sm ring-1 ring-slate-200">
                 <h2 class="text-2xl font-semibold text-slate-900">Employer login</h2>
-                <p class="mt-2 text-sm text-slate-500">
+                <p class="mt-2 text-sm text-slate-900">
                     Access your job posts, monitor candidate progress, and move offers forward quickly.
                 </p>
 
@@ -44,7 +44,7 @@
                     @endif
 
                     <label class="flex flex-col gap-2">
-                        <span class="text-sm font-semibold text-slate-700">Work email</span>
+                        <span class="text-sm font-semibold text-slate-900">Work email</span>
                         <x-input id="email"
                                  class="block mt-1 w-full"
                                  type="email"
@@ -56,7 +56,7 @@
                     </label>
 
                     <label class="flex flex-col gap-2">
-                        <span class="text-sm font-semibold text-slate-700">Password</span>
+                        <span class="text-sm font-semibold text-slate-900">Password</span>
                         <x-input id="password"
                                  class="block mt-1 w-full"
                                  type="password"
@@ -65,8 +65,8 @@
                                  autocomplete="current-password" />
                     </label>
 
-                    <div class="flex items-center justify-between text-sm text-slate-500">
-                        <label for="remember_me" class="flex cursor-pointer items-center gap-2 text-slate-600">
+                    <div class="flex items-center justify-between text-sm text-slate-900">
+                        <label for="remember_me" class="flex cursor-pointer items-center gap-2 text-slate-900">
                             <x-checkbox id="remember_me" name="remember" />
                             <span>Keep me signed in</span>
                         </label>
@@ -78,17 +78,17 @@
                         @endif
                     </div>
 
-                    <div class="flex flex-col gap-4">
+                    <div class="flex flex-col gap-4 text-slate-900">
                         <x-button class="w-full justify-center bg-slate-900 hover:bg-slate-800">
                             {{ __('Log in') }}
                         </x-button>
-                        <p class="text-sm text-slate-500">
+                        <p class="text-sm text-slate-900">
                             Need an employer account?
                             <a href="{{ route('employer.register') }}" class="font-semibold text-blue-600 hover:text-blue-700">
                                 Create one now
                             </a>
                         </p>
-                        <p class="text-sm text-slate-500">
+                        <p class="text-sm text-slate-900">
                             Looking for job opportunities?
                             <a href="{{ route('login') }}" class="font-semibold text-blue-600 hover:text-blue-700">
                                 Log in as a candidate
@@ -99,9 +99,9 @@
             </section>
 
             <aside class="space-y-6">
-                <div class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+                <div class="rounded-3xl border border-slate-200 bg-white p-8 text-slate-900 shadow-sm">
                     <h3 class="text-lg font-semibold text-slate-900">Why teams choose ProSnap</h3>
-                    <ul class="mt-3 space-y-3 text-sm text-slate-600">
+                    <ul class="mt-3 space-y-3 text-sm text-slate-900">
                         <li class="flex gap-3">
                             <span class="inline-flex h-2 w-2 rounded-full bg-emerald-600"></span>
                             Publish roles with clarity around success metrics and collaboration expectations.
@@ -117,9 +117,9 @@
                     </ul>
                 </div>
 
-                <div class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+                <div class="rounded-3xl border border-slate-200 bg-white p-8 text-slate-900 shadow-sm">
                     <h3 class="text-lg font-semibold text-slate-900">Quick tip</h3>
-                    <p class="mt-3 text-sm text-slate-600">
+                    <p class="mt-3 text-sm text-slate-900">
                         New roles perform best when you highlight impact, salary expectations, and team culture in the description.
                     </p>
                 </div>

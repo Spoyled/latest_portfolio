@@ -149,15 +149,15 @@
                 <ul class="mt-8 space-y-5 text-sm text-slate-200">
                     <li class="rounded-2xl border border-white/10 bg-white/5 p-4">
                         <p class="font-semibold text-white">Sara, Product Designer</p>
-                        <p class="mt-1 text-sm">“Published my profile on Monday and booked interviews by Wednesday with two remote-first teams.”</p>
+                        <p class="mt-1 text-sm">“TEXT”</p>
                     </li>
                     <li class="rounded-2xl border border-white/10 bg-white/5 p-4">
-                        <p class="font-semibold text-white">Arcadia Systems</p>
-                        <p class="mt-1 text-sm">“Replaced spreadsheets with ProSnap — now we see talent analytics instantly and move to interviews faster.”</p>
+                        <p class="font-semibold text-white"> Systems</p>
+                        <p class="mt-1 text-sm">“TEXT”</p>
                     </li>
                     <li class="rounded-2xl border border-white/10 bg-white/5 p-4">
                         <p class="font-semibold text-white">Victor, Engineering Lead</p>
-                        <p class="mt-1 text-sm">“ATS checks flagged gaps, so I tweaked my resume and landed a role with serious growth in under three weeks.”</p>
+                        <p class="mt-1 text-sm">“TEXT”</p>
                     </li>
                 </ul>
             </div>
@@ -332,10 +332,7 @@
                 Join ProSnap for free, publish in minutes, and stay top-of-mind for the opportunities that matter.
             </p>
             <div class="mt-8 flex flex-wrap justify-center gap-4">
-                <a href="{{ route('register') }}"
-                   class="inline-flex items-center gap-2 rounded-xl bg-yellow-400 px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-yellow-300">
-                    Create candidate account
-                </a>
+                
                 <a href="{{ route('employer.register') }}"
                    class="inline-flex items-center gap-2 rounded-xl border border-white/30 px-6 py-3 text-sm font-semibold text-white transition hover:border-yellow-300 hover:text-yellow-200">
                     Create employer account

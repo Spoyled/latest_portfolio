@@ -26,7 +26,7 @@
         x-transition:leave="transition ease-in duration-150"
         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
         x-transition:leave-end="opacity-0 translate-y-2 scale-95"
-        class="flex w-[20rem] max-w-xs flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/20 ring-1 ring-slate-900/10 sm:w-80 sm:max-w-sm">
+        class="flex h-[26rem] w-[20rem] max-h-[90vh] max-w-xs flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/20 ring-1 ring-slate-900/10 sm:h-[30rem] sm:w-80 sm:max-w-sm">
         <header class="flex items-start justify-between gap-4 bg-slate-900 px-4 py-3 text-white">
             <div>
                 <p class="text-sm font-semibold">ProSnap Assistant</p>
@@ -43,10 +43,10 @@
             </button>
         </header>
 
-        <div class="flex flex-1 flex-col bg-white">
+        <div class="flex flex-1 min-h-0 flex-col bg-white">
             <div
                 x-ref="stream"
-                class="flex flex-1 flex-col gap-3 overflow-y-auto px-4 py-4 text-sm text-slate-700">
+                class="flex flex-1 min-h-0 flex-col gap-3 overflow-y-auto px-4 py-4 text-sm text-slate-700">
                 <template x-for="item in conversation" :key="item.id">
                     <div class="flex"
                          :class="item.sender === 'bot' ? 'justify-start' : 'justify-end'">
@@ -134,7 +134,7 @@
                             <ul class="mt-2 list-disc space-y-1 pl-5 text-sm">
                                 <li>The <strong>Featured resumes</strong> section on the home page.</li>
                                 <li>The <a href="{{ route('all_posts.index') }}" class="text-blue-600 underline">All Posts</a> feed where employers search by role or skill.</li>
-                                <li>Your personal share link — perfect for LinkedIn or outreach.</li>
+                                <li>Your personal share link - perfect for LinkedIn or outreach.</li>
                             </ul>
                             <p class="mt-2 text-sm text-slate-600">Every update refreshes your spot in the feed, so keep it current.</p>`,
                         options: [
@@ -173,7 +173,7 @@
                             <ul class="mt-2 list-disc space-y-1 pl-5 text-sm">
                                 <li>Log in, then open <a href="{{ route('employer.make_post') }}" class="text-blue-600 underline">Post a Job</a>.</li>
                                 <li>Add a concise title, expectations, required skills, and your timeline.</li>
-                                <li>Publish — the role appears in the candidate feed and on your employer dashboard.</li>
+                                <li>Publish - the role appears in the candidate feed and on your employer dashboard.</li>
                             </ul>
                             <p class="mt-2 text-sm text-slate-600">Need visuals? Attach company branding to stand out.</p>`,
                         options: [
@@ -228,7 +228,7 @@
                                 <li>Enter the email tied to your account.</li>
                                 <li>Follow the link in your inbox to choose a new password.</li>
                             </ol>
-                            <p class="mt-2 text-sm text-slate-600">Employer accounts reset separately — reach out if the link doesn't recognize you.</p>`,
+                    <p class="mt-2 text-sm text-slate-600">Employer accounts reset separately - reach out if the link doesn't recognize you.</p>`,
                         options: [
                             { id: 'opt-account-reset-back', label: 'Back to account help', next: 'account_intro' },
                             { id: 'opt-account-reset-home', label: 'Main menu', next: 'intro' },
@@ -239,7 +239,7 @@
                             <ul class="mt-2 list-disc space-y-1 pl-5 text-sm">
                                 <li>Check spam or promotions for the confirmation email.</li>
                                 <li>On the verification page, press <strong>Resend</strong> to generate a fresh link.</li>
-                                <li>Links expire after 60 minutes—trigger a new one if it timed out.</li>
+                                <li>Links expire after 60 minutes - trigger a new one if it timed out.</li>
                             </ul>
                             <p class="mt-2 text-sm text-slate-600">Still blocked? Send us the email you registered with and we'll verify manually.</p>`,
                         options: [
@@ -262,7 +262,7 @@
                     },
                     contact_human: {
                         message: `<p class="font-semibold">Need a person?</p>
-                            <p class="mt-1 text-sm">Email us at <a href="mailto:support@prosnap.io" class="text-blue-600 underline">support@prosnap.io</a> — we usually reply within one business day.</p>
+                            <p class="mt-1 text-sm">Email us at <a href="mailto:support@prosnap.io" class="text-blue-600 underline">support@prosnap.io</a> - we usually reply within one business day.</p>
                             <p class="mt-3 text-xs text-slate-500">Share as much context as you can (links, screenshots, the email you signed up with) so we can help faster.</p>`,
                         options: [
                             { id: 'opt-contact-mail', label: 'Compose an email to support', url: 'mailto:support@prosnap.io' },
@@ -302,7 +302,7 @@
                                 <li>Publish a role with expectations, stack, and timeline.</li>
                                 <li>Review applicants and connect directly inside ProSnap.</li>
                             </ul>
-                            <p class="mt-2 text-sm text-slate-600">You’ll unlock additional guidance once you’re signed in.</p>`,
+                            <p class="mt-2 text-sm text-slate-600">You'll unlock additional guidance once you're signed in.</p>`,
                         options: [
                             { id: 'opt-guest-employer-register', label: 'Create employer account', url: '{{ route('employer.register') }}' },
                             { id: 'opt-guest-employer-login', label: 'Employer login', url: '{{ route('employer.login') }}' },
@@ -327,7 +327,7 @@
                         message: `<p class="font-semibold">Recovering access:</p>
                             <ul class="mt-2 list-disc space-y-1 pl-5 text-sm">
                                 <li>Reset your password from the <a href="{{ route('password.request') }}" class="text-blue-600 underline">password reset</a> page.</li>
-                                <li>Didn’t get a verification email? Use the resend link from the banner after logging in.</li>
+                                <li>Didn't get a verification email? Use the resend link from the banner after logging in.</li>
                                 <li>Still stuck? Drop us a note with the email you signed up with.</li>
                             </ul>`,
                         options: [
@@ -338,8 +338,8 @@
                     },
                     guest_contact: {
                         message: `<p class="font-semibold">We're here to help.</p>
-                            <p class="mt-1 text-sm">Email <a href="mailto:support@prosnap.io" class="text-blue-600 underline">support@prosnap.io</a> and we’ll reply within one business day.</p>
-                            <p class="mt-3 text-xs text-slate-500">Include details about what you’re trying to do so we can point you to the right spot.</p>`,
+                            <p class="mt-1 text-sm">Email <a href="mailto:support@prosnap.io" class="text-blue-600 underline">support@prosnap.io</a> and we'll reply within one business day.</p>
+                            <p class="mt-3 text-xs text-slate-500">Include details about what you're trying to do so we can point you to the right spot.</p>`,
                         options: [
                             { id: 'opt-guest-contact-mail', label: 'Compose email', url: 'mailto:support@prosnap.io' },
                             { id: 'opt-guest-contact-back', label: 'Main menu', next: 'intro' },
@@ -356,7 +356,7 @@
                     openPanel() {
                         if (!this.open) {
                             this.open = true;
-                            this.$nextTick(() => this.scrollToBottom());
+                            this.queueScroll();
                         }
                     },
                     closePanel() {
@@ -384,7 +384,7 @@
                             ...option,
                             id: option.id || `opt-${Date.now()}-${Math.random()}`,
                         }));
-                        this.$nextTick(() => this.scrollToBottom());
+                        this.queueScroll();
                     },
                     choose(option) {
                         this.conversation.push({
@@ -392,6 +392,8 @@
                             sender: 'user',
                             text: option.label,
                         });
+
+                        this.queueScroll();
 
                         if (option.url) {
                             window.open(option.url, option.external ? '_blank' : '_self');
@@ -421,12 +423,20 @@
                             this.currentOptions = [];
                         }
 
-                        this.$nextTick(() => this.scrollToBottom());
+                        this.queueScroll();
                     },
                     scrollToBottom() {
                         if (this.$refs.stream) {
                             this.$refs.stream.scrollTop = this.$refs.stream.scrollHeight;
                         }
+                    },
+                    queueScroll() {
+                        this.$nextTick(() => {
+                            const raf = typeof window !== 'undefined' && window.requestAnimationFrame
+                                ? window.requestAnimationFrame.bind(window)
+                                : (cb) => setTimeout(cb, 16);
+                            raf(() => this.scrollToBottom());
+                        });
                     },
                     init() {
                         this.nodes = config.isAuthenticated ? buildAuthenticatedNodes() : buildGuestNodes();

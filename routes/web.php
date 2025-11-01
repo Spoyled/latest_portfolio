@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
 // Controllers
+use App\Http\Controllers\CvVerificationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PortfolioController;
 use App\Http\Controllers\MakePostController;
@@ -23,6 +24,7 @@ use App\Models\Post;
 // Public Home Page
 // ------------------------------------------------
 Route::get('/', HomeController::class)->name('home');
+Route::get('/cv/verify/{hash}', CvVerificationController::class)->name('cv.verify');
 
 // ------------------------------------------------
 // Employer Authentication + Routes

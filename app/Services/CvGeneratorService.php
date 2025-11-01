@@ -3,6 +3,11 @@
 namespace App\Services;
 
 use Carbon\Carbon;
+use Endroid\QrCode\Builder\Builder;
+use Endroid\QrCode\Encoding\Encoding;
+use Endroid\QrCode\ErrorCorrectionLevel;
+use Endroid\QrCode\RoundBlockSizeMode;
+use Endroid\QrCode\Writer\PngWriter;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -16,6 +21,8 @@ use PhpOffice\PhpWord\Style\Language;
 
 class CvGeneratorService
 {
+    private array $ephemeralFiles = [];
+
     public function generate(array $cvData, string $template): string
     {
         $cvData = $this->prepareForTemplate($cvData);
@@ -33,8 +40,10 @@ class CvGeneratorService
         };
 
         $lastError = null;
+        $this->ephemeralFiles = [];
 
         foreach ($order as $tpl) {
+            $this->ephemeralFiles = [];
             try {
                 $phpWord = $this->buildDocument($cvData, $tpl);
 
@@ -57,6 +66,8 @@ class CvGeneratorService
             } catch (\Throwable $e) {
                 $lastError = $e->getMessage();
                 // try next template
+            } finally {
+                $this->cleanupTempFiles();
             }
         }
 
@@ -86,9 +97,10 @@ class CvGeneratorService
     private function validateDocx(string $path): bool
     {
         $zip = new \ZipArchive();
-        if ($zip->open($path) !== true) return false;
+        if ($zip->open($path) !== true) {
+            return false;
+        }
 
-        // Only the truly mandatory parts
         foreach (['[Content_Types].xml', 'word/document.xml'] as $required) {
             if ($zip->locateName($required) === false) {
                 $zip->close();
@@ -96,45 +108,55 @@ class CvGeneratorService
             }
         }
 
-        // Basic XML well-formedness on required + common optional parts (if they exist)
-        $toCheck = [
-            'word/document.xml',
-            'word/styles.xml',
-            'word/numbering.xml',
-            'word/_rels/document.xml.rels', // OPTIONAL – check only if present
-        ];
-
+        $issues = [];
         libxml_use_internal_errors(true);
-        foreach ($toCheck as $xmlFile) {
+
+        foreach (['word/document.xml', 'word/styles.xml', 'word/numbering.xml'] as $xmlFile) {
             $xml = $zip->getFromName($xmlFile);
-            if ($xml === false) continue;              // optional: skip if not present
+            if ($xml === false) {
+                continue;
+            }
+
             $dom = new \DOMDocument();
             if (!$dom->loadXML($xml, LIBXML_PARSEHUGE)) {
-                libxml_clear_errors();
-                $zip->close();
-                return false;
+                $errors = array_map(
+                    static fn ($error) => trim($error->message ?? 'XML parsing issue'),
+                    libxml_get_errors()
+                );
+                if (!empty($errors)) {
+                    $issues[$xmlFile] = array_slice($errors, 0, 5);
+                }
             }
             libxml_clear_errors();
         }
 
-        // Optional sanity pass on external links ONLY if rels exists
         $relsXml = $zip->getFromName('word/_rels/document.xml.rels');
         if ($relsXml !== false) {
             $dom = new \DOMDocument();
-            if (@$dom->loadXML($relsXml, LIBXML_PARSEHUGE)) {
+            if (!$dom->loadXML($relsXml, LIBXML_PARSEHUGE)) {
+                $issues['word/_rels/document.xml.rels'] = ['Relationship file is not well-formed XML.'];
+            } else {
                 foreach ($dom->getElementsByTagName('Relationship') as $rel) {
                     if (strtolower($rel->getAttribute('TargetMode')) === 'external') {
                         $target = $rel->getAttribute('Target');
                         if (strlen($target) > 1900 || preg_match('#[\x00-\x1F\x7F]#', $target)) {
-                            $zip->close();
-                            return false;
+                            $issues['word/_rels/document.xml.rels'][] = 'External link target looks malformed or too long.';
                         }
                     }
                 }
             }
         }
 
+        libxml_use_internal_errors(false);
         $zip->close();
+
+        if (!empty($issues)) {
+            Log::warning('DOCX validation warnings', [
+                'path' => $path,
+                'issues' => $issues,
+            ]);
+        }
+
         return true;
     }
 
@@ -935,11 +957,105 @@ class CvGeneratorService
     private function addGeneratedFooter(Section $section, array $cvData, string $muted): void
     {
         $section->addTextBreak(1);
+        $generatedAt = Carbon::parse($cvData['meta']['generated_at'] ?? now())->format('Y-m-d H:i');
+        $verification = Arr::get($cvData, 'meta.verification', []);
+        $hash = Arr::get($verification, 'hash');
+
+        $footer = 'Generated: ' . $generatedAt;
+        if ($hash) {
+            $footer .= ' • Verification ID: ' . strtoupper(substr($hash, 0, 12));
+        }
+
         $section->addText(
-            'Generated: ' . Carbon::parse($cvData['meta']['generated_at'] ?? now())->format('Y-m-d H:i'),
+            $footer,
             ['color' => $muted, 'italic' => true],
             ['alignment' => Jc::RIGHT]
         );
+
+        if ($verificationUrl = Arr::get($verification, 'url')) {
+            $this->addVerificationBadge($section, $verificationUrl, $hash, $muted);
+        }
+    }
+
+    private function addVerificationBadge(Section $section, string $url, ?string $hash, string $muted): void
+    {
+        $section->addTextBreak(1);
+
+        $table = $section->addTable([
+            'width'      => 100 * 50,
+            'unit'       => 'pct',
+            'cellMargin' => 120,
+        ]);
+
+        $table->addRow();
+        $leftCell  = $table->addCell($this->pct(68), ['valign' => 'center']);
+        $rightCell = $table->addCell($this->pct(32), ['valign' => 'center']);
+
+        $leftCell->addText(
+            'Scan to verify authenticity:',
+            ['color' => $muted, 'bold' => true, 'size' => 9],
+            ['spaceAfter' => 40]
+        );
+
+        if ($hash) {
+            $leftCell->addText(
+                'Verification ID: ' . strtoupper($hash),
+                ['color' => $muted, 'size' => 8],
+                ['spaceAfter' => 40]
+            );
+        }
+
+        $this->addSafeLink($leftCell, $url, 'Verification portal', ['color' => '2563EB', 'size' => 8]);
+
+        if ($qrPath = $this->buildQrCodeImage($url)) {
+            $rightCell->addImage($qrPath, [
+                'width'     => 84,
+                'height'    => 84,
+                'alignment' => Jc::CENTER,
+            ]);
+        }
+    }
+
+    private function buildQrCodeImage(string $url): ?string
+    {
+        try {
+            $result = Builder::create()
+                ->writer(new PngWriter())
+                ->data($url)
+                ->encoding(new Encoding('UTF-8'))
+                ->errorCorrectionLevel(ErrorCorrectionLevel::Low)
+                ->size(220)
+                ->margin(6)
+                ->roundBlockSizeMode(RoundBlockSizeMode::Margin)
+                ->build();
+
+            $path = tempnam(sys_get_temp_dir(), 'qr_') . '.png';
+            $result->saveToFile($path);
+
+            return $this->rememberEphemeralFile($path);
+        } catch (\Throwable $e) {
+            Log::warning('QR code generation failed: ' . $e->getMessage());
+
+            return null;
+        }
+    }
+
+    private function rememberEphemeralFile(string $path): string
+    {
+        $this->ephemeralFiles[] = $path;
+
+        return $path;
+    }
+
+    private function cleanupTempFiles(): void
+    {
+        foreach ($this->ephemeralFiles as $file) {
+            if (is_string($file) && $file !== '' && @is_file($file)) {
+                @unlink($file);
+            }
+        }
+
+        $this->ephemeralFiles = [];
     }
 
     private function formatContactLine(array $cvData): ?string

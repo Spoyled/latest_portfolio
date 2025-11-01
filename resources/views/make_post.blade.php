@@ -278,20 +278,6 @@
                         </li>
                     </ul>
                 </div>
-
-                <div class="rounded-3xl bg-slate-900 p-8 text-white shadow-sm">
-                    <h3 class="text-lg font-semibold">Need feedback before posting?</h3>
-                    <p class="mt-3 text-sm text-slate-200">
-                        Share a draft link with a mentor or colleague. Fresh eyes can help you highlight what matters most.
-                    </p>
-                    <a href="{{ route('custom.profile.show') }}"
-                       class="mt-6 inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-yellow-200">
-                        Review my profile
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/>
-                        </svg>
-                    </a>
-                </div>
             </aside>
         </div>
     </div>

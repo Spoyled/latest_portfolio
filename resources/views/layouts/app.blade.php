@@ -42,6 +42,8 @@
         @stack('scripts')
         @stack('modals')
 
+        @include('components.support-bot')
+
         @livewireScripts
     </body>
 </html>

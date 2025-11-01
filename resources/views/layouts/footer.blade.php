@@ -83,7 +83,7 @@
                                       d="M18 13.37V18a2 2 0 01-2 2H6a2 2 0 01-2-2v-6a2 2 0 012-2h3.28a1 1 0 00.7-.29l1.42-1.42a1 1 0 01.7-.29H16a2 2 0 012 2v3.37z" />
                             </svg>
                         </span>
-                        <span>Vilnius · Remote-first</span>
+                        <span>Vilnius</span>
                     </li>
                     <li class="flex items-center gap-3">
                         <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-slate-900/80 text-yellow-300">
@@ -101,15 +101,15 @@
         </div>
 
         <div class="flex flex-col gap-4 border-t border-slate-800 pt-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-            <p>&copy; {{ now()->year }} ProSnap. Crafted for modern hiring teams and ambitious professionals.</p>
+            <p>&copy; {{ now()->year }} ProSnap.
             <div class="flex gap-4">
-                <a href="{{ url('/policy') }}" class="transition hover:text-yellow-300">Privacy</a>
-                <a href="{{ url('/terms') }}" class="transition hover:text-yellow-300">Terms</a>
-                <a href="mailto:support@prosnap.io" class="transition hover:text-yellow-300">Contact</a>
+
             </div>
         </div>
     </div>
 </footer>
+
+@include('components.support-bot')
 
 </body>
 </html>

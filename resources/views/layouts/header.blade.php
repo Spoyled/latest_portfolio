@@ -52,9 +52,6 @@
     } elseif ($isUser) {
         $ctaRoute = route('make_post.index');
         $ctaLabel = 'Share a resume post';
-    } else {
-        $ctaRoute = route('register');
-        $ctaLabel = 'Create candidate account';
     }
 @endphp
 
@@ -90,15 +87,7 @@
                 </div>
 
                 <div class="flex items-center gap-4">
-                    <a href="{{ $ctaRoute }}"
-                       class="hidden items-center gap-2 rounded-2xl border border-yellow-300/30 bg-yellow-300/10 px-4 py-2 text-sm font-semibold text-yellow-200 transition hover:border-yellow-300 hover:bg-yellow-300/20 lg:inline-flex">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                             stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                  d="M12 4v16m8-8H4" />
-                        </svg>
-                        {{ $ctaLabel }}
-                    </a>
+
 
                     @if ($isAuthenticated)
                         <div x-data="{ menuOpen: false }" class="relative">
@@ -184,15 +173,7 @@
                         {{ $link['label'] }}
                     </a>
                 @endforeach
-                <a href="{{ $ctaRoute }}"
-                       class="inline-flex items-center justify-center gap-2 rounded-2xl border border-yellow-300/30 bg-yellow-300/10 px-4 py-3 text-yellow-200 transition hover:border-yellow-300 hover:bg-yellow-300/20">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                         stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                              d="M12 4v16m8-8H4" />
-                    </svg>
-                    {{ $ctaLabel }}
-                </a>
+                
                 @unless ($isAuthenticated)
                     <a href="{{ route('login') }}"
                        class="inline-flex items-center justify-center rounded-2xl border border-slate-700 px-4 py-3 text-slate-200 transition hover:border-yellow-300 hover:text-yellow-200">
